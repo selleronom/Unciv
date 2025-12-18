@@ -1,18 +1,12 @@
 package com.unciv.logic.multiplayer.storage
 
+import com.badlogic.gdx.Gdx
 import com.badlogic.gdx.Net
 import com.unciv.UncivGame
 import com.unciv.utils.Log
 import com.unciv.utils.debug
-import io.ktor.http.*
-import java.io.BufferedReader
-import java.io.DataOutputStream
-import java.io.InputStreamReader
 import java.net.DatagramSocket
-import java.net.HttpURLConnection
 import java.net.InetAddress
-import java.net.URI
-import java.net.URL
 
 private typealias SendRequestCallback = (success: Boolean, result: String, code: Int?)->Unit
 
@@ -22,48 +16,45 @@ object SimpleHttp {
     }
 
     fun sendRequest(method: String, url: String, content: String, timeout: Int = 5000, header: Map<String, String>? = null, action: SendRequestCallback) {
-        var uri = URI(url)
-        if (uri.host == null) uri = URI("http://$url")
+        // Avoid java.net URL handlers on iOS (RoboVM) by using LibGDX's cross-platform Net API.
+        val fullUrl = if (url.startsWith("http://") || url.startsWith("https://")) url else "http://$url"
 
-        val urlObj: URL
+        val request = Net.HttpRequest().apply {
+            this.method = method
+            this.url = fullUrl
+            this.timeOut = timeout
+            if (content.isNotEmpty()) this.content = content
+
+            // Standard headers
+            headers["Content-Type"] = "text/plain"
+            headers["User-Agent"] = if (UncivGame.isCurrentInitialized())
+                "Unciv/${UncivGame.VERSION.toNiceString()}-GNU-Terry-Pratchett"
+            else "Unciv/Turn-Checker-GNU-Terry-Pratchett"
+
+            // Custom headers
+            for ((key, value) in header.orEmpty()) headers[key] = value
+        }
+
         try {
-            urlObj = uri.toURL()
+            Gdx.net.sendHttpRequest(request, object : Net.HttpResponseListener {
+                override fun handleHttpResponse(httpResponse: Net.HttpResponse) {
+                    val status = httpResponse.status.statusCode
+                    val text = try { httpResponse.resultAsString } catch (t: Throwable) { "" }
+                    action(true, text, status)
+                }
+
+                override fun failed(t: Throwable) {
+                    debug("Error during HTTP request", t)
+                    action(false, t.message ?: "HTTP request failed", null)
+                }
+
+                override fun cancelled() {
+                    action(false, "HTTP request cancelled", null)
+                }
+            })
         } catch (t: Throwable) {
             Log.debug("Bad URL", t)
             action(false, "Bad URL", null)
-            return
-        }
-
-        with(urlObj.openConnection() as HttpURLConnection) {
-            requestMethod = method  // default is GET
-            connectTimeout = timeout
-            instanceFollowRedirects = true
-            setRequestProperty(HttpHeaders.UserAgent, UncivGame.getUserAgent("Turn-Checker"))
-            setRequestProperty(HttpHeaders.ContentType, "text/plain")
-
-            for ((key, value) in header.orEmpty()) {
-                setRequestProperty(key, value)
-            }
-
-            try {
-                if (content.isNotEmpty()) {
-                    doOutput = true
-                    val postData: ByteArray = content.toByteArray(Charsets.UTF_8)
-                    val outputStream = DataOutputStream(outputStream)
-                    outputStream.write(postData)
-                    outputStream.flush()
-                }
-
-                val text = BufferedReader(InputStreamReader(inputStream, Charsets.UTF_8)).readText()
-                action(true, text, responseCode)
-            } catch (t: Throwable) {
-                debug("Error during HTTP request", t)
-                val errorMessageToReturn =
-                    if (errorStream != null) BufferedReader(InputStreamReader(errorStream, Charsets.UTF_8)).readText()
-                    else t.message!!
-                debug("Returning error message [%s]", errorMessageToReturn)
-                action(false, errorMessageToReturn, responseCode)
-            }
         }
     }
 

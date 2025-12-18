@@ -1,0 +1,5 @@
+# Appfile for Unciv iOS
+# This file defines the Apple ID and app identifier for fastlane
+
+app_identifier(ENV["FASTLANE_APP_IDENTIFIER"])
+apple_id(ENV["FASTLANE_APPLE_ID"])

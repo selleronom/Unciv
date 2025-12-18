@@ -123,10 +123,10 @@ data class GameContext(
         result = 31 * result + attackedTile.hash()
         result = 31 * result + combatAction.hash()
         result = 31 * result + region.hash()
-        result = 31 * result + ignoreConditionals.hashCode()
+    // Avoid Boolean.hashCode(boolean) which is missing on RoboVM java.lang.Boolean
+    result = 31 * result + if (ignoreConditionals) 1 else 0
         return result
     }
 
 
 }
-

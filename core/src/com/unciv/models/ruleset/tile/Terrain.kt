@@ -12,6 +12,7 @@ import com.unciv.models.ruleset.unique.UniqueType
 import com.unciv.ui.components.extensions.colorFromRGB
 import com.unciv.ui.objectdescriptions.uniquesToCivilopediaTextLines
 import com.unciv.ui.screens.civilopediascreen.FormattedLine
+import com.unciv.utils.toIntLoose
 import yairm210.purity.annotations.Cache
 import yairm210.purity.annotations.Readonly
 
@@ -195,6 +196,6 @@ class Terrain : RulesetStatsObject() {
     }
 
     fun setTransients() {
-        damagePerTurn = getMatchingUniques(UniqueType.DamagesContainingUnits).sumOf { it.params[0].toInt() }
+        damagePerTurn = getMatchingUniques(UniqueType.DamagesContainingUnits).sumOf { it.params[0].toIntLoose() }
     }
 }

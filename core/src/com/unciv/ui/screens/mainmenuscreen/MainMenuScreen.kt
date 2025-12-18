@@ -348,7 +348,8 @@ class MainMenuScreen: BaseScreen(), RecreateOnResize {
                 val (message) = LoadGameScreen.getLoadExceptionMessage(notAPlayer)
                 launchOnGLThread { ToastPopup(message, this@MainMenuScreen) }
                 return@run
-            } catch (_: Exception) {
+            } catch (ex: Exception) {
+                ex.printStackTrace()
                 launchOnGLThread { ToastPopup(errorText, this@MainMenuScreen) }
                 return@run
             }
@@ -377,7 +378,7 @@ class MainMenuScreen: BaseScreen(), RecreateOnResize {
         if (easterEggRuleset != null) return easterEggRuleset!!
         val rulesetParameters = game.settings.lastGameSetup?.gameParameters
         if (rulesetParameters != null) return RulesetCache.getComplexRuleset(rulesetParameters)
-        return RulesetCache[BaseRuleset.Civ_V_GnK.fullName]
+        return RulesetCache[BaseRuleset.Unciv_Basic.fullName]
             ?: throw IllegalStateException("No ruleset found")
     }
 

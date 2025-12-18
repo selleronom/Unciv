@@ -10,6 +10,7 @@ import com.unciv.models.Religion
 import com.unciv.models.ruleset.unique.Unique
 import com.unciv.models.ruleset.unique.UniqueType
 import com.unciv.ui.components.extensions.toPercent
+import com.unciv.utils.toIntLoose
 import yairm210.purity.annotations.Readonly
 
 class CityReligionManager : IsPartOfGameInfoSerialization {
@@ -261,13 +262,13 @@ class CityReligionManager : IsPartOfGameInfoSerialization {
         var spreadRange = 10
 
         for (unique in city.getMatchingUniques(UniqueType.ReligionSpreadDistance)) {
-            spreadRange += unique.params[0].toInt()
+            spreadRange += unique.params[0].toIntLoose()
         }
 
         val majorityReligion = getMajorityReligion()
         if (majorityReligion != null) {
             for (unique in majorityReligion.foundingCiv.getMatchingUniques(UniqueType.ReligionSpreadDistance))
-                spreadRange += unique.params[0].toInt()
+                spreadRange += unique.params[0].toIntLoose()
         }
 
         return spreadRange

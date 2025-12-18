@@ -5,6 +5,7 @@ import com.unciv.models.Counter
 import com.unciv.models.ruleset.Ruleset
 import com.unciv.models.ruleset.unique.Unique
 import com.unciv.models.ruleset.unique.UniqueType
+import com.unciv.utils.toIntLoose
 import yairm210.purity.annotations.Pure
 import yairm210.purity.annotations.Readonly
 
@@ -58,7 +59,7 @@ class GreatPersonPointsBreakdown private constructor(private val ruleset: Rulese
             // Now add boni for GreatPersonPointPercentage
             for (unique in city.getMatchingUniques(UniqueType.GreatPersonPointPercentage)) {
                 if (!city.matchesFilter(unique.params[1])) continue
-                yield(AllGPPercentageEntry(getUniqueSourceName(unique), guessPediaLink(unique), unique.params[0].toInt()))
+                yield(AllGPPercentageEntry(getUniqueSourceName(unique), guessPediaLink(unique), unique.params[0].toIntLoose()))
             }
 
             // Now add boni for GreatPersonBoostWithFriendship (Sweden UP)
@@ -69,7 +70,7 @@ class GreatPersonPointsBreakdown private constructor(private val ruleset: Rulese
                 val boostUniques = civ.getMatchingUniques(UniqueType.GreatPersonBoostWithFriendship) +
                     otherCiv.getMatchingUniques(UniqueType.GreatPersonBoostWithFriendship)
                 for (unique in boostUniques)
-                    yield(AllGPPercentageEntry("Declaration of Friendship", null, unique.params[0].toInt()))
+                    yield(AllGPPercentageEntry("Declaration of Friendship", null, unique.params[0].toIntLoose()))
             }
         }
 
@@ -125,7 +126,7 @@ class GreatPersonPointsBreakdown private constructor(private val ruleset: Rulese
             val gppName = unique.params[0]
             if (gppName !in allNames) continue // No sense applying a percentage without base points
             val bonusEntry = Entry(getUniqueSourceName(unique), guessPediaLink(unique))
-            bonusEntry.counter.add(gppName, unique.params[1].toInt())
+            bonusEntry.counter.add(gppName, unique.params[1].toIntLoose())
             percentBonuses.add(bonusEntry)
         }
     }

@@ -19,9 +19,9 @@ import com.unciv.utils.debug
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.launchIn
+import org.threeten.bp.Duration
+import org.threeten.bp.Instant
 import yairm210.purity.annotations.Readonly
-import java.time.Duration
-import java.time.Instant
 import java.util.concurrent.atomic.AtomicReference
 
 

@@ -3,6 +3,7 @@ package com.unciv.models
 import com.badlogic.gdx.utils.Json
 import com.badlogic.gdx.utils.JsonValue
 import com.unciv.logic.IsPartOfGameInfoSerialization
+import com.unciv.utils.toIntLoose
 import yairm210.purity.annotations.InternalState
 import yairm210.purity.annotations.LocalState
 import yairm210.purity.annotations.Readonly
@@ -26,10 +27,18 @@ open class Counter<K>(
     }
 
     override operator fun get(key: K): Int { // don't return null if empty
-        return if (containsKey(key))
-        // .toInt(), because GDX deserializes Counter values as *floats* for some reason
-            super.get(key)!!.toInt()
-        else 0
+        return if (containsKey(key)) {
+            // .toInt(), because GDX deserializes Counter values as *floats* for some reason
+            // Use safe conversion for iOS compatibility (RoboVM parseInt doesn't handle leading '+')
+            val value = super.get(key)
+            when (value) {
+                is Int -> value
+                is Float -> value.toInt()
+                is Double -> value.toInt()
+                is String -> value.toIntLoose()
+                else -> value!!.toString().toIntLoose()
+            }
+        } else 0
     }
 
     override fun put(key: K, value: Int): Int? {

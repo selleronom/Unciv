@@ -14,6 +14,7 @@ import com.unciv.models.stats.Stats
 import com.unciv.ui.components.extensions.getNeedMoreAmountString
 import com.unciv.ui.components.extensions.toPercent
 import com.unciv.ui.objectdescriptions.BuildingDescriptions
+import com.unciv.utils.toIntLoose
 import yairm210.purity.annotations.Cache
 import yairm210.purity.annotations.LocalState
 import yairm210.purity.annotations.Readonly
@@ -127,10 +128,10 @@ class Building : RulesetStatsObject(), INonPerpetualConstruction {
         val stateForConditionals = city?.state ?: civInfo.state
 
         for (unique in getMatchingUniques(UniqueType.CostIncreasesWhenBuilt, stateForConditionals))
-            productionCost += civInfo.civConstructions.builtItemsWithIncreasingCost[name] * unique.params[0].toInt()
+            productionCost += civInfo.civConstructions.builtItemsWithIncreasingCost[name] * unique.params[0].toIntLoose()
 
         for (unique in getMatchingUniques(UniqueType.CostIncreasesPerCity, stateForConditionals))
-            productionCost += civInfo.cities.size * unique.params[0].toInt()
+            productionCost += civInfo.cities.size * unique.params[0].toIntLoose()
 
         for (unique in getMatchingUniques(UniqueType.CostPercentageChange, stateForConditionals))
             productionCost *= unique.params[0].toPercent()
@@ -198,15 +199,15 @@ class Building : RulesetStatsObject(), INonPerpetualConstruction {
                     && city.matchesFilter(it.params[3])
                 }.map {
                     getCostForConstructionsIncreasingInPrice(
-                        it.params[1].toInt(),
-                        it.params[4].toInt(),
+                        it.params[1].toIntLoose(),
+                        it.params[4].toIntLoose(),
                         city.civ.civConstructions.boughtItemsWithIncreasingPrice[name]
                     ) * city.civ.gameInfo.speed.statCostModifiers[stat]!!
                 }
             )
             yieldAll(city.getMatchingUniques(UniqueType.BuyBuildingsByProductionCost, conditionalState)
                 .filter { it.params[1] == stat.name && matchesFilter(it.params[0], conditionalState) }
-                .map { (getProductionCost(city.civ, city) * it.params[2].toInt()).toFloat() }
+                .map { (getProductionCost(city.civ, city) * it.params[2].toIntLoose()).toFloat() }
             )
             if (city.getMatchingUniques(UniqueType.BuyBuildingsWithStat, conditionalState)
                 .any {
@@ -222,7 +223,7 @@ class Building : RulesetStatsObject(), INonPerpetualConstruction {
                     it.params[2] == stat.name
                     && matchesFilter(it.params[0], conditionalState)
                     && city.matchesFilter(it.params[3])
-                }.map { it.params[1].toInt() * city.civ.gameInfo.speed.statCostModifiers[stat]!! }
+                }.map { it.params[1].toIntLoose() * city.civ.gameInfo.speed.statCostModifiers[stat]!! }
             )
         }.minOrNull()
     }
@@ -247,7 +248,7 @@ class Building : RulesetStatsObject(), INonPerpetualConstruction {
         if (cityConstructions.isBeingConstructedOrEnqueued(name))
             return false
         for (unique in getMatchingUniques(UniqueType.MaxNumberBuildable)) {
-            if (cityConstructions.city.civ.civConstructions.countConstructedObjects(this) >= unique.params[0].toInt())
+            if (cityConstructions.city.civ.civConstructions.countConstructedObjects(this) >= unique.params[0].toIntLoose())
                 return false
         }
 
@@ -306,7 +307,7 @@ class Building : RulesetStatsObject(), INonPerpetualConstruction {
                     yield(RejectionReasonType.ShouldNotBeDisplayed.toInstance())
 
                 UniqueType.RequiresPopulation ->
-                    if (unique.params[0].toInt() > city.population.population)
+                    if (unique.params[0].toIntLoose() > city.population.population)
                         yield(RejectionReasonType.PopulationRequirement.toInstance(unique.text))
 
                 UniqueType.MustBeOn ->
@@ -326,7 +327,7 @@ class Building : RulesetStatsObject(), INonPerpetualConstruction {
                         yield(RejectionReasonType.MustNotBeNextToTile.toInstance(unique.text))
 
                 UniqueType.MustHaveOwnedWithinTiles ->
-                    if (cityCenter.getTilesInDistance(unique.params[1].toInt())
+                    if (cityCenter.getTilesInDistance(unique.params[1].toIntLoose())
                         .none { it.matchesFilter(unique.params[0], civ) && it.getOwner() == civ }
                     )
                         yield(RejectionReasonType.MustOwnTile.toInstance(unique.text))
@@ -336,7 +337,7 @@ class Building : RulesetStatsObject(), INonPerpetualConstruction {
                         yield(RejectionReasonType.Obsoleted.toInstance(unique.text))
 
                 UniqueType.MaxNumberBuildable ->
-                    if (civ.civConstructions.countConstructedObjects(this@Building) >= unique.params[0].toInt())
+                    if (civ.civConstructions.countConstructedObjects(this@Building) >= unique.params[0].toIntLoose())
                         yield(RejectionReasonType.MaxNumberBuildable.toInstance())
 
                 // To be replaced with `Only available <after [Apollo Project] has been build>`
@@ -440,7 +441,7 @@ class Building : RulesetStatsObject(), INonPerpetualConstruction {
             when (conditional.type) {
                 UniqueType.ConditionalBuildingBuiltAmount -> {
                     val building = civ.getEquivalentBuilding(conditional.params[0]).name
-                    val amount = conditional.params[1].toInt()
+                    val amount = conditional.params[1].toIntLoose()
                     val cityFilter = conditional.params[2]
                     val numberOfCities = civ.cities.count {
                         it.cityConstructions.containsBuildingOrEquivalent(building) && it.matchesFilter(cityFilter)
@@ -569,7 +570,7 @@ class Building : RulesetStatsObject(), INonPerpetualConstruction {
         val resourceRequirements = Counter<String>()
         if (requiredResource != null) resourceRequirements[requiredResource!!] = 1
         for (unique in uniques)
-            resourceRequirements.add(unique.params[1], unique.params[0].toInt())
+resourceRequirements.add(unique.params[1], unique.params[0].toIntLoose())
         return resourceRequirements
     }
 }

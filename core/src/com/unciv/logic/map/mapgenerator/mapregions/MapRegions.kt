@@ -21,6 +21,7 @@ import com.unciv.models.translations.equalsPlaceholderText
 import com.unciv.models.translations.getPlaceholderParameters
 import com.unciv.utils.Log
 import com.unciv.utils.Tag
+import com.unciv.utils.toIntLoose
 import kotlin.math.abs
 import kotlin.math.max
 import kotlin.math.min
@@ -396,10 +397,10 @@ class MapRegions (val ruleset: Ruleset) {
                 }
                 // Test inclusion criteria
                 if (type.getMatchingUniques(UniqueType.RegionRequirePercentSingleType).any {
-                        region.getTerrainAmount(it.params[1]) >= (it.params[0].toInt() * region.tiles.size) / 100
+                        region.getTerrainAmount(it.params[1]) >= (it.params[0].toIntLoose() * region.tiles.size) / 100
                     }
                     || type.getMatchingUniques(UniqueType.RegionRequirePercentTwoTypes).any {
-                        region.getTerrainAmount(it.params[1]) + region.getTerrainAmount(it.params[2]) >= (it.params[0].toInt() * region.tiles.size) / 100
+                        region.getTerrainAmount(it.params[1]) + region.getTerrainAmount(it.params[2]) >= (it.params[0].toIntLoose() * region.tiles.size) / 100
                     }
                 ) {
                     region.type = type.name
@@ -473,10 +474,10 @@ fun Tile.getTileFertility(checkCoasts: Boolean): Int {
     var fertility = 0
     for (terrain in allTerrains) {
         if (terrain.hasUnique(UniqueType.OverrideFertility))
-            return terrain.getMatchingUniques(UniqueType.OverrideFertility).first().params[0].toInt()
+            return terrain.getMatchingUniques(UniqueType.OverrideFertility).first().params[0].toIntLoose()
         else
             fertility += terrain.getMatchingUniques(UniqueType.AddFertility)
-                .sumOf { it.params[0].toInt() }
+                .sumOf { it.params[0].toIntLoose() }
     }
     if (isAdjacentToRiver()) fertility += 1
     if (isAdjacentTo(Constants.freshWater)) fertility += 1 // meaning total +2 for river
@@ -492,9 +493,9 @@ fun getRegionPriority(terrain: Terrain?): Int? {
         null
     else
         if (terrain.hasUnique(UniqueType.RegionRequirePercentSingleType))
-            terrain.getMatchingUniques(UniqueType.RegionRequirePercentSingleType).first().params[2].toInt()
+            terrain.getMatchingUniques(UniqueType.RegionRequirePercentSingleType).first().params[2].toIntLoose()
         else
-            terrain.getMatchingUniques(UniqueType.RegionRequirePercentTwoTypes).first().params[3].toInt()
+            terrain.getMatchingUniques(UniqueType.RegionRequirePercentTwoTypes).first().params[3].toIntLoose()
 }
 
 /** @return a fake unique with the same conditionals, but sorted alphabetically.

@@ -48,8 +48,8 @@ import com.unciv.ui.screens.worldscreen.bottombar.BattleTableHelpers.battleAnima
 import com.unciv.utils.Concurrency
 import com.unciv.utils.Log
 import com.unciv.utils.launchOnGLThread
+import kotlin.math.max
 import yairm210.purity.annotations.Readonly
-import java.lang.Float.max
 
 
 class WorldMapHolder(

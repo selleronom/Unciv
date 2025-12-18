@@ -106,7 +106,7 @@ object RulesetCache : HashMap<String, Ruleset>() {
         return errorLines
     }
 
-    fun getVanillaRuleset() = this[BaseRuleset.Civ_V_Vanilla.fullName]!!.clone() // safeguard, so no-one edits the base ruleset by mistake
+    fun getVanillaRuleset() = this[BaseRuleset.Unciv_Basic.fullName]!!.clone() // safeguard, so no-one edits the base ruleset by mistake
 
     fun getSortedBaseRulesets(): List<String> {
         val baseRulesets = values

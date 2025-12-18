@@ -18,6 +18,7 @@ import com.unciv.models.ruleset.unit.BaseUnit
 import com.unciv.models.stats.Stat
 import com.unciv.ui.screens.victoryscreen.RankingType
 import com.unciv.utils.randomWeighted
+import com.unciv.utils.toIntLoose
 import yairm210.purity.annotations.Readonly
 import kotlin.math.max
 import kotlin.math.min
@@ -173,7 +174,7 @@ class CityStateFunctions(val civInfo: Civilization) {
 
         // Siam gets +10 XP for all CS units
         for (unique in receivingCiv.getMatchingUniques(UniqueType.CityStateGiftedUnitsStartWithXp)) {
-            placedUnit.promotions.XP += unique.params[0].toInt()
+            placedUnit.promotions.XP += unique.params[0].toIntLoose()
         }
 
         // Point to the gifted unit, then to the other places mentioned in the message
@@ -304,7 +305,7 @@ class CityStateFunctions(val civInfo: Civilization) {
             newAlly.cache.updateViewableTiles()
             newAlly.cache.updateCivResources()
             for (unique in newAlly.getMatchingUniques(UniqueType.CityStateCanBeBoughtForGold))
-                newAlly.getDiplomacyManager(civInfo)!!.setFlag(DiplomacyFlags.MarriageCooldown, unique.params[0].toInt())
+                newAlly.getDiplomacyManager(civInfo)!!.setFlag(DiplomacyFlags.MarriageCooldown, unique.params[0].toIntLoose())
 
             // Join the wars of our new ally - loop through all civs they are at war with
             for (newEnemy in civInfo.gameInfo.civilizations.filter { it.isAtWarWith(newAlly) && it.isAlive() } ) {

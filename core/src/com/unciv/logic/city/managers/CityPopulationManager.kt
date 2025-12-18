@@ -11,6 +11,7 @@ import com.unciv.models.Counter
 import com.unciv.models.ruleset.unique.LocalUniqueCache
 import com.unciv.models.ruleset.unique.UniqueType
 import com.unciv.ui.components.extensions.toPercent
+import com.unciv.utils.toIntLoose
 import com.unciv.utils.withItem
 import com.unciv.utils.withoutItem
 import yairm210.purity.annotations.Readonly
@@ -125,7 +126,7 @@ class CityPopulationManager : IsPartOfGameInfoSerialization {
         val percentOfFoodCarriedOver =
             city.getMatchingUniques(UniqueType.CarryOverFood)
                 .filter { city.matchesFilter(it.params[1]) }
-                .sumOf { it.params[0].toInt() }
+                .sumOf { it.params[0].toIntLoose() }
                 .coerceAtMost(95)  // Try to avoid runaway food gain in mods, just in case
         foodStored += (foodNeededToGrow * percentOfFoodCarriedOver / 100f).toInt()
         addPopulation(1)

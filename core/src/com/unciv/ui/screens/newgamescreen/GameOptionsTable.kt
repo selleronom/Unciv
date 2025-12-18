@@ -450,7 +450,7 @@ class GameOptionsTable(
     }
 
     fun resetRuleset() {
-        val rulesetName = BaseRuleset.Civ_V_GnK.fullName
+        val rulesetName = BaseRuleset.Unciv_Basic.fullName
         gameParameters.baseRuleset = rulesetName
         modCheckboxes.setBaseRuleset(rulesetName)
         modCheckboxes.disableAllCheckboxes()

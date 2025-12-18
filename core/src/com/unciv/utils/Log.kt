@@ -1,9 +1,13 @@
 package com.unciv.utils
 
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
+import java.util.TimeZone
 import yairm210.purity.annotations.Immutable
 import yairm210.purity.annotations.Pure
 import yairm210.purity.annotations.Readonly
-import java.time.Instant
+import org.threeten.bp.Instant
 import java.util.regex.Pattern
 
 
@@ -173,12 +177,22 @@ interface LogBackend {
 
 /** Only for tests, or temporary main() functions */
 open class DefaultLogBackend : LogBackend {
+    private val dateFormat = object : ThreadLocal<SimpleDateFormat>() {
+        override fun initialValue(): SimpleDateFormat {
+            val sdf = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.US)
+            sdf.timeZone = TimeZone.getTimeZone("UTC")
+            return sdf
+        }
+    }
+
+    private fun nowString(): String = dateFormat.get().format(Date())
+
     override fun debug(tag: Tag, curThreadName: String, msg: String) {
-        println("${Instant.now()} [${curThreadName}] [${tag.name}] $msg")
+        println("${nowString()} [${curThreadName}] [${tag.name}] $msg")
     }
 
     override fun error(tag: Tag, curThreadName: String, msg: String) {
-        println("${Instant.now()} [${curThreadName}] [${tag.name}] [ERROR] $msg")
+        println("${nowString()} [${curThreadName}] [${tag.name}] [ERROR] $msg")
     }
 
     override fun isRelease(): Boolean {

@@ -17,6 +17,7 @@ import com.unciv.models.ruleset.unique.UniqueTriggerActivation
 import com.unciv.models.ruleset.unique.UniqueType
 import com.unciv.models.translations.fillPlaceholders
 import com.unciv.ui.components.extensions.toPercent
+import com.unciv.utils.toIntLoose
 import yairm210.purity.annotations.Cache
 import org.jetbrains.annotations.VisibleForTesting
 import yairm210.purity.annotations.Immutable
@@ -400,12 +401,12 @@ class DiplomacyManager() : IsPartOfGameInfoSerialization {
         var restingPoint = 0f
 
         for (unique in otherCiv.getMatchingUniques(UniqueType.CityStateRestingPoint))
-            restingPoint += unique.params[0].toInt()
+            restingPoint += unique.params[0].toIntLoose()
 
         if (civInfo.cities.any() && civInfo.getCapital() != null)
             for (unique in otherCiv.getMatchingUniques(UniqueType.RestingPointOfCityStatesFollowingReligionChange))
                 if (otherCiv.religionManager.religion?.name == civInfo.getCapital()!!.religion.getMajorityReligionName())
-                    restingPoint += unique.params[0].toInt()
+                    restingPoint += unique.params[0].toIntLoose()
 
         if (diplomaticStatus == DiplomaticStatus.Protector) restingPoint += 10
 

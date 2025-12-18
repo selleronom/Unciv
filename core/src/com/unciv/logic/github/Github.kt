@@ -1,5 +1,7 @@
 package com.unciv.logic.github
 
+import com.badlogic.gdx.Application
+import com.badlogic.gdx.Gdx
 import com.badlogic.gdx.files.FileHandle
 import com.badlogic.gdx.graphics.Pixmap
 import com.unciv.json.fromJsonFile
@@ -11,6 +13,7 @@ import com.unciv.logic.github.Github.repoNameToFolderName
 import com.unciv.logic.github.GithubAPI.fetchReleaseZip
 import com.unciv.models.ruleset.ModOptions
 import com.unciv.utils.Concurrency
+import com.unciv.utils.Log
 import io.ktor.client.statement.*
 import io.ktor.http.*
 import kotlinx.coroutines.Job
@@ -105,6 +108,11 @@ object Github {
     suspend fun tryGetGithubReposWithTopic(
         page: Int, amountPerPage: Int, searchRequest: String = ""
     ): GithubAPI.RepoSearch? {
+        // iOS/RoboVM: Use SimpleHttpClient instead of Ktor (Ktor uses Kotlin reflection)
+        if (Gdx.app.type == Application.ApplicationType.iOS) {
+            return tryGetGithubReposWithTopicSimple(page, amountPerPage, searchRequest)
+        }
+        
         val resp = GithubAPI.fetchGithubReposWithTopic(searchRequest, page, amountPerPage)
         if (resp.status.isSuccess()) {
             val text = resp.bodyAsText()
@@ -115,6 +123,29 @@ object Github {
             }
         }
         return null
+    }
+    
+    /**
+     * iOS-compatible version using SimpleHttpClient (no Kotlin reflection)
+     */
+    private suspend fun tryGetGithubReposWithTopicSimple(
+        page: Int, amountPerPage: Int, searchRequest: String = ""
+    ): GithubAPI.RepoSearch? {
+        val searchQuery = if (searchRequest.isNotEmpty()) "topic:unciv-mod+$searchRequest" 
+                          else "topic:unciv-mod"
+        val url = "${GithubAPI.baseUrl}/search/repositories" +
+                "?q=$searchQuery" +
+                "&page=$page" +
+                "&per_page=$amountPerPage"
+        
+        try {
+            // Use SimpleHttpClient with default GitHub headers (User-Agent, bearer token, etc.)
+            val text = SimpleHttpClient.getWithRetry(url)
+            return json().fromJson(GithubAPI.RepoSearch::class.java, text)
+        } catch (e: Exception) {
+            Log.error("Failed to fetch GitHub repos", e)
+            return null
+        }
     }
 
     /** Get a Pixmap from a "preview" png or jpg file at the root of the repo, falling back to the
@@ -130,6 +161,13 @@ object Github {
         // `head/meta[property=og:image]/@content`, which is one extra spurious roundtrip and a
         // non-trivial waste of bandwidth.
         // Thus we ask for a "preview" file as part of the repo contents instead.
+        
+        // iOS/RoboVM: Ktor uses Kotlin reflection which crashes on iOS
+        // For now, disable preview images on iOS (non-critical feature)
+        if (Gdx.app.type == Application.ApplicationType.iOS) {
+            return null
+        }
+        
         try {
             val resp = runBlocking {
                 /**
@@ -159,6 +197,11 @@ object Github {
      *  @see <a href="https://docs.github.com/en/rest/git/trees#get-a-tree">Github API "Get a tree"</a>
      */
     suspend fun getRepoSize(repo: GithubAPI.Repo): Int {
+        // iOS/RoboVM: Use SimpleHttpClient to avoid Kotlin reflection crash
+        if (Gdx.app.type == Application.ApplicationType.iOS) {
+            return getRepoSizeSimple(repo)
+        }
+        
         val resp = repo.fetchReleaseZip()
 
         if (resp.status.isSuccess()) {
@@ -175,17 +218,60 @@ object Github {
 
         return -1
     }
+    
+    private fun getRepoSizeSimple(repo: GithubAPI.Repo): Int {
+        try {
+            val url = "${GithubAPI.baseUrl}/repos/${repo.full_name}/git/trees/${repo.default_branch}?recursive=true"
+            val text = SimpleHttpClient.getWithRetry(url)
+            val tree = json().fromJson(GithubAPI.Tree::class.java, text)
+            
+            if (tree.truncated) return -1  // unlikely: >100k blobs or blob > 7MB
+
+            var totalSizeBytes = 0L
+            for (file in tree.tree)
+                totalSizeBytes += file.size
+
+            // overflow unlikely: >2TB
+            return ((totalSizeBytes + 512) / 1024).toInt()
+        } catch (e: Exception) {
+            Log.error("Failed to fetch repo size", e)
+            return -1
+        }
+    }
 
     /**
      * Query GitHub for topics named "unciv-mod*"
      * @return Parsed [TopicSearchResponse][GithubAPI.TopicSearchResponse] json on success, `null` on failure.
      */
     suspend fun tryGetGithubTopics(): GithubAPI.TopicSearchResponse? {
+        // iOS/RoboVM: Use SimpleHttpClient to avoid Kotlin reflection crash
+        if (Gdx.app.type == Application.ApplicationType.iOS) {
+            return tryGetGithubTopicsSimple()
+        }
+        
         val resp = GithubAPI.fetchGithubTopics()
         if (resp.status.isSuccess()) {
             return json().fromJson(GithubAPI.TopicSearchResponse::class.java, resp.bodyAsText())
         }
         return null
+    }
+    
+    /**
+     * iOS-compatible version using SimpleHttpClient (no Kotlin reflection)
+     */
+    private suspend fun tryGetGithubTopicsSimple(): GithubAPI.TopicSearchResponse? {
+        val url = "${GithubAPI.baseUrl}/search/topics" +
+                "?q=unciv-mod+repositories:>1" +
+                "&sort=name" +
+                "&order=asc"
+        
+        try {
+            val text = SimpleHttpClient.getWithRetry(url)
+            return json().fromJson(GithubAPI.TopicSearchResponse::class.java, text)
+        } catch (e: Exception) {
+            Log.error("Failed to fetch GitHub topics", e)
+            return null
+        }
     }
 
     /** Rewrite modOptions file for a mod we just installed to include metadata we got from the GitHub api

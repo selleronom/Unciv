@@ -19,7 +19,7 @@ import com.unciv.utils.ScreenOrientation
 import yairm210.purity.annotations.Readonly
 import java.text.Collator
 import java.text.NumberFormat
-import java.time.Duration
+import org.threeten.bp.Duration
 import java.util.Locale
 import kotlin.reflect.KClass
 import kotlin.reflect.KMutableProperty0
@@ -216,7 +216,6 @@ class GameSettings {
      *  retrieving a valid position from our upstream libraries while the window is maximized or iconified has proven tricky so far.
      */
     data class WindowState(val width: Int = 900, val height: Int = 600) {
-        constructor(bounds: java.awt.Rectangle) : this(bounds.width, bounds.height)
 
         companion object {
             /** Our choice of minimum window width */
@@ -248,8 +247,7 @@ class GameSettings {
          *  @return `this` unchanged if it is within valid limits, otherwise a new WindowState that is.
          *  @see coerceIn
          */
-        fun coerceIn(maximumWindowBounds: java.awt.Rectangle) =
-            coerceIn(maximumWindowBounds.width, maximumWindowBounds.height)
+    // Desktop-only helpers that depend on AWT are provided as extensions in the desktop module
     }
 
     enum class ScreenSize(
@@ -257,14 +255,11 @@ class GameSettings {
         val virtualWidth: Float,
         val virtualHeight: Float
     ) {
-        Micro(630f,420f),
         Tiny(750f,500f),
         Small(900f,600f),
         Medium(1050f,700f),
         Large(1200f,800f),
-        Huge(1500f,1000f),
-        FullHD(1920f, 1280f),
-        QuadHD(2560f, 1707f)
+        Huge(1500f,1000f)
     }
 
     enum class NationPickerListMode { Icons, List }

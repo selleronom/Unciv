@@ -18,6 +18,7 @@ import com.unciv.logic.civilization.Civilization
 import com.unciv.models.ruleset.MilestoneType
 import com.unciv.models.ruleset.Victory
 import com.unciv.models.translations.tr
+import com.unciv.utils.toIntLoose
 import com.unciv.ui.components.extensions.toLabel
 import com.unciv.ui.components.input.KeyCharAndCode
 import com.unciv.ui.components.widgets.TabbedPager
@@ -240,7 +241,7 @@ class VictoryScreenIllustrations(
                     civ.cities.count { it.isOriginalCapital }
                 }
                 MilestoneType.CompletePolicyBranches -> {
-                    total += milestone.params[0].toInt()
+                    total += milestone.params[0].toIntLoose()
                     civ.policies.completedBranches.size
                 }
                 MilestoneType.MoreCountableThanEachPlayer -> {

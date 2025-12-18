@@ -186,14 +186,14 @@ abstract class BaseScreen : Screen {
      *  Determine a Ruleset for Civilopedia to use (remember: it is supposed to work without a running game loaded)
      *
      *  - `open` as some important screens are supposed to provide directly.
-     *  - The default implementation searches using the [screenStack][UncivGame.screenStack] for a source of a Ruleset and returns Civ_V_GnK when that fails.
+     *  - The default implementation searches using the [screenStack][UncivGame.screenStack] for a source of a Ruleset and returns Unciv_Basic when that fails.
      *  - Care must be taken in [PickerScreen][com.unciv.ui.screens.pickerscreens.PickerScreen] derivates - they will default to the searching implementation, but often could do the task more efficiently.
      */
     open fun getCivilopediaRuleset(): Ruleset {
         if (game.worldScreen != null) return game.worldScreen!!.gameInfo.ruleset
         val mainMenuScreen = game.getScreensOfType(MainMenuScreen::class).firstOrNull()
         if (mainMenuScreen != null) return mainMenuScreen.getCivilopediaRuleset()
-        return RulesetCache[BaseRuleset.Civ_V_GnK.fullName]!!
+        return RulesetCache[BaseRuleset.Unciv_Basic.fullName]!!
     }
 
     /** Opens Civilopedia

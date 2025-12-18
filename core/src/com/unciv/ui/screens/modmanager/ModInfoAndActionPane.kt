@@ -5,7 +5,6 @@ import com.badlogic.gdx.graphics.Texture
 import com.badlogic.gdx.scenes.scene2d.ui.Image
 import com.badlogic.gdx.scenes.scene2d.ui.Table
 import com.badlogic.gdx.scenes.scene2d.ui.TextButton
-import com.badlogic.gdx.utils.GdxRuntimeException
 import com.unciv.UncivGame
 import com.unciv.logic.github.Github
 import com.unciv.logic.github.GithubAPI
@@ -23,8 +22,6 @@ import com.unciv.ui.components.input.onRightClick
 import com.unciv.ui.popups.ToastPopup
 import com.unciv.ui.screens.modmanager.ModManagementScreen.Companion.cleanModName
 import com.unciv.utils.Concurrency
-import com.unciv.utils.Log
-import java.io.IOException
 import kotlin.math.max
 
 internal class ModInfoAndActionPane : Table() {
@@ -171,13 +168,7 @@ internal class ModInfoAndActionPane : Table() {
         val previewFile = modFolder.child("preview.jpg").takeIf { it.exists() }
             ?: modFolder.child("preview.png").takeIf { it.exists() }
             ?: return
-        try {
-            setTextureAsPreview(Texture(previewFile), modName)
-        } catch (ex: Throwable) {
-            val cause = if (ex is GdxRuntimeException) ex.cause else ex
-            Log.debug("Could not load local preview file %s: %s", previewFile.path(), cause)
-            if (cause is IOException) previewFile.delete() // File content invalid and not loadable as pixmap gives this
-        }
+        setTextureAsPreview(Texture(previewFile), modName)
     }
 
     private fun addUncivLogo(modName: String) {

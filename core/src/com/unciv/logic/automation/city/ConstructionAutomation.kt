@@ -26,6 +26,7 @@ import com.unciv.models.stats.Stat
 import com.unciv.models.stats.Stats
 import com.unciv.ui.screens.cityscreen.CityScreen
 import com.unciv.ui.screens.victoryscreen.RankingType
+import com.unciv.utils.toIntLoose
 import yairm210.purity.annotations.Readonly
 import kotlin.math.max
 import kotlin.math.sqrt
@@ -391,7 +392,7 @@ class ConstructionAutomation(val cityConstructions: CityConstructions) {
         }
 
         for (unique in building.getMatchingUniques(UniqueType.CarryOverFood, cityState)) {
-            if (city.matchesFilter(unique.params[1]) && unique.params[0].toInt() != 0) {
+            if (city.matchesFilter(unique.params[1]) && unique.params[0].toIntLoose() != 0) {
                 val foodGain = cityStats.currentCityStats.food + buildingStats.food
                 val relativeAmount = unique.params[0].toFloat() / 100f
                 stats[Stat.Food] += foodGain * relativeAmount // Essentialy gives us the food per turn this unique saves us

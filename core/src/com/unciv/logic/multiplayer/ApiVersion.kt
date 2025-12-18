@@ -11,7 +11,7 @@ import com.unciv.logic.multiplayer.apiv2.VersionResponse
 import com.unciv.utils.Log
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
-import io.ktor.client.engine.cio.CIO
+import io.ktor.client.engine.okhttp.OkHttp
 import io.ktor.client.plugins.HttpTimeout
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.client.plugins.defaultRequest
@@ -20,6 +20,8 @@ import io.ktor.client.statement.bodyAsText
 import io.ktor.http.isSuccess
 import io.ktor.serialization.kotlinx.json.json
 import kotlinx.serialization.json.Json
+import com.unciv.logic.github.SimpleHttpClient
+import com.unciv.logic.UncivKtor
 
 /**
  * Enum determining the version of a remote server API implementation
@@ -73,8 +75,47 @@ enum class ApiVersion {
             }
             val fixedBaseUrl = if (baseUrl.endsWith("/")) baseUrl else "$baseUrl/"
 
-            // This client instance should be used during the API detection
-            val client = HttpClient(CIO) {
+            // If Ktor engines aren't supported (iOS/RoboVM), avoid creating a Ktor client
+            if (!UncivKtor.isKtorSupported()) {
+                // Try /isalive via SimpleHttpClient
+                try {
+                    val responseText = SimpleHttpClient.getWithRetry(fixedBaseUrl + "isalive", addGithubHeaders = false)
+                    if (responseText.startsWith("true")) {
+                        Log.debug("Detected APIv1 at %s (no feature set)", fixedBaseUrl)
+                        return APIv1
+                    }
+                    try {
+                        val serverFeatureSet: ServerFeatureSet = json().fromJson(ServerFeatureSet::class.java, responseText)
+                        Log.debug("Detected APIv1 at %s: %s", fixedBaseUrl, serverFeatureSet)
+                        return APIv1
+                    } catch (e: Exception) {
+                        Log.debug("Failed to de-serialize OK response body of '/isalive' at %s: %s", fixedBaseUrl, e.localizedMessage)
+                    }
+                } catch (e: Exception) {
+                    Log.debug("Failed to fetch '/isalive' at %s: %s", fixedBaseUrl, e.localizedMessage)
+                    if (!suppress) throw UncivNetworkException(e)
+                }
+
+                // Try /api/version via SimpleHttpClient
+                try {
+                    val responseText = SimpleHttpClient.getWithRetry(fixedBaseUrl + "api/version", addGithubHeaders = false)
+                    try {
+                        val serverVersion: VersionResponse = json().fromJson(VersionResponse::class.java, responseText)
+                        Log.debug("Detected APIv2 at %s: %s", fixedBaseUrl, serverVersion)
+                        return APIv2
+                    } catch (e: Exception) {
+                        Log.debug("Failed to de-serialize OK response body of '/api/version' at %s: %s", fixedBaseUrl, e.localizedMessage)
+                    }
+                } catch (e: Exception) {
+                    Log.debug("Failed to fetch '/api/version' at %s: %s", fixedBaseUrl, e.localizedMessage)
+                    if (!suppress) throw UncivNetworkException(e)
+                }
+
+                return null
+            }
+
+            // Otherwise use Ktor-based detection (platform supports Ktor engines)
+            val client = HttpClient(OkHttp) {
                 install(ContentNegotiation) {
                     json(Json {
                         prettyPrint = true

@@ -17,6 +17,7 @@ import com.unciv.models.ruleset.unique.UniqueType
 import com.unciv.models.stats.Stat
 import com.unciv.models.stats.Stats
 import com.unciv.models.translations.tr
+import com.unciv.utils.toIntLoose
 import com.unciv.ui.components.SmallButtonStyle
 import com.unciv.ui.components.UncivTooltip.Companion.addTooltip
 import com.unciv.ui.components.extensions.disable
@@ -327,7 +328,7 @@ class ImprovementPickerScreen(
                 proposedSolutions.add("Have this tile inside your empire" to null)
             if (ImprovementBuildingProblem.MissingResources in unbuildableBecause) {
                 val resources = improvement.getMatchingUniques(UniqueType.ConsumesResources)
-                    .filter { currentPlayerCiv.getResourceAmount(it.params[1]) < it.params[0].toInt() }
+                    .filter { currentPlayerCiv.getResourceAmount(it.params[1]) < it.params[0].toIntLoose() }
                     .map { "Acquire more [${it.params[1]}]" to ruleset.tileResources[it.params[1]]?.makeLink() }
                 proposedSolutions.addAll(resources)
             }

@@ -10,6 +10,7 @@ import com.unciv.models.ruleset.unique.UniqueTarget
 import com.unciv.models.ruleset.unique.UniqueType
 import com.unciv.models.stats.Stat
 import com.unciv.ui.components.extensions.toPercent
+import com.unciv.utils.toIntLoose
 import yairm210.purity.annotations.Readonly
 
 object UnitActionsReligion {
@@ -97,7 +98,7 @@ object UnitActionsReligion {
             action = {
                 val followersOfOtherReligions = city.religion.getFollowersOfOtherReligionsThan(unit.religion!!)
                 for (unique in unit.getMatchingUniques(UniqueType.StatsWhenSpreading, checkCivInfoUniques = true)) {
-                    unit.civ.addStat(Stat.valueOf(unique.params[1]), followersOfOtherReligions * unique.params[0].toInt())
+                    unit.civ.addStat(Stat.valueOf(unique.params[1]), followersOfOtherReligions * unique.params[0].toIntLoose())
                 }
                 val previousReligion = city.religion.getMajorityReligion()
                 city.religion.addPressure(unit.religion!!, getPressureAddedFromSpread(unit))

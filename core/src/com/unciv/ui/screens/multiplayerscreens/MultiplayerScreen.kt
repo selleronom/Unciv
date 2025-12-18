@@ -27,8 +27,8 @@ import com.unciv.ui.screens.savescreens.LoadGameScreen
 import com.unciv.utils.Concurrency
 import com.unciv.utils.Log
 import com.unciv.utils.launchOnGLThread
-import java.time.Duration
-import java.time.Instant
+import org.threeten.bp.Duration
+import org.threeten.bp.Instant
 import com.unciv.ui.components.widgets.AutoScrollPane as ScrollPane
 
 class MultiplayerScreen : PickerScreen() {

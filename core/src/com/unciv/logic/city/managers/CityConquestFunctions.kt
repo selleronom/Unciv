@@ -18,6 +18,7 @@ import com.unciv.logic.trade.TradeOfferType
 import com.unciv.models.ruleset.unique.GameContext
 import com.unciv.models.ruleset.unique.UniqueTriggerActivation
 import com.unciv.models.ruleset.unique.UniqueType
+import com.unciv.utils.toIntLoose
 import com.unciv.ui.components.extensions.toPercent
 import com.unciv.utils.withItem
 import com.unciv.utils.withoutItem
@@ -89,7 +90,7 @@ class CityConquestFunctions(val city: City) {
                         .count {
                             it.cityConstructions.containsBuildingOrEquivalent(building.name)
                                 || it.cityConstructions.isBeingConstructedOrEnqueued(building.name)
-                        } >= unique.params[0].toInt()
+                        } >= unique.params[0].toIntLoose()
                 ) {
                     // For now, just destroy in new city. Even if constructing in own cities
                     city.cityConstructions.removeBuilding(building)

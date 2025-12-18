@@ -374,8 +374,8 @@ class NewGameScreen(
             success = false
             ToastPopup(message, this, 5000)
             gameSetupInfo.gameParameters.mods.clear()
-            gameSetupInfo.gameParameters.baseRuleset = BaseRuleset.Civ_V_GnK.fullName
-            return RulesetCache[BaseRuleset.Civ_V_GnK.fullName]!!
+            gameSetupInfo.gameParameters.baseRuleset = BaseRuleset.Unciv_Basic.fullName
+            return RulesetCache[BaseRuleset.Unciv_Basic.fullName]!!
         }
 
         val newRuleset = try {

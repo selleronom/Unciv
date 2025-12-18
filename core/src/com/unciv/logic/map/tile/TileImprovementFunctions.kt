@@ -11,6 +11,7 @@ import com.unciv.models.ruleset.tile.TileImprovement
 import com.unciv.models.ruleset.unique.GameContext
 import com.unciv.models.ruleset.unique.UniqueTriggerActivation
 import com.unciv.models.ruleset.unique.UniqueType
+import com.unciv.utils.toIntLoose
 import com.unciv.models.stats.Stats
 import yairm210.purity.annotations.LocalState
 import yairm210.purity.annotations.Readonly
@@ -220,7 +221,7 @@ class TileImprovementFunctions(val tile: Tile) {
         
         for (unique in improvement.getMatchingUniques(UniqueType.CostsResources, gameContext)) {
             val resource = tile.ruleset.tileResources[unique.params[1]] ?: continue
-            var amount = unique.params[0].toInt()
+            var amount = unique.params[0].toIntLoose()
             if (unique.isModifiedByGameSpeed()) amount = (amount * civ.gameInfo.speed.modifier).toInt()
             civ.gainStockpiledResource(resource, -amount)
         }

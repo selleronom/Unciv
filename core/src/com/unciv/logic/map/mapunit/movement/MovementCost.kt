@@ -8,6 +8,7 @@ import com.unciv.logic.map.tile.RoadStatus
 import com.unciv.logic.map.tile.Tile
 import com.unciv.models.ruleset.unique.GameContext
 import com.unciv.models.ruleset.unique.UniqueType
+import com.unciv.utils.toIntLoose
 import yairm210.purity.annotations.Readonly
 
 object MovementCost {
@@ -153,7 +154,7 @@ object MovementCost {
             return civInfo.enemyMovementPenaltyUniques!!.sumOf {
                 if (it.type!! == UniqueType.EnemyUnitsSpendExtraMovement
                     && enemyUnit.matchesFilter(it.params[0]))
-                    it.params[1].toInt()
+                    it.params[1].toIntLoose()
                 else 0
             }.toFloat()
         }

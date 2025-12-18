@@ -24,6 +24,7 @@ import com.unciv.ui.components.extensions.getNeedMoreAmountString
 import com.unciv.ui.components.extensions.toPercent
 import com.unciv.ui.objectdescriptions.BaseUnitDescriptions
 import com.unciv.ui.screens.civilopediascreen.FormattedLine
+import com.unciv.utils.toIntLoose
 import com.unciv.utils.yieldIfNotNull
 import yairm210.purity.annotations.Cache
 import yairm210.purity.annotations.LocalState
@@ -235,7 +236,7 @@ class BaseUnit : RulesetObject(), INonPerpetualConstruction {
 
         if (city != null)
             for (unique in getMatchingUniques(UniqueType.RequiresPopulation))
-                if (unique.params[0].toInt() > city.population.population)
+                if (unique.params[0].toIntLoose() > city.population.population)
                     yield(RejectionReasonType.PopulationRequirement.toInstance(unique.getDisplayText()))
 
         for (requiredTech: String in requiredTechs())
@@ -261,7 +262,7 @@ class BaseUnit : RulesetObject(), INonPerpetualConstruction {
             yield(RejectionReasonType.NoSettlerForOneCityPlayers.toInstance())
 
         if (getMatchingUniques(UniqueType.MaxNumberBuildable, stateForConditionals).any {
-                civ.civConstructions.countConstructedObjects(this@BaseUnit) >= it.params[0].toInt()
+                civ.civConstructions.countConstructedObjects(this@BaseUnit) >= it.params[0].toIntLoose()
             })
             yield(RejectionReasonType.MaxNumberBuildable.toInstance())
 
@@ -315,7 +316,7 @@ class BaseUnit : RulesetObject(), INonPerpetualConstruction {
             when (conditional.type) {
                 UniqueType.ConditionalBuildingBuiltAmount -> {
                     val building = civ.getEquivalentBuilding(conditional.params[0]).name
-                    val amount = conditional.params[1].toInt()
+                    val amount = conditional.params[1].toIntLoose()
                     val cityFilter = conditional.params[2]
                     val numberOfCities = civ.cities.count {
                         it.cityConstructions.containsBuildingOrEquivalent(building) && it.matchesFilter(cityFilter)
@@ -384,7 +385,7 @@ class BaseUnit : RulesetObject(), INonPerpetualConstruction {
 
         for (unique in cityConstructions.city.getMatchingUniques(UniqueType.UnitStartingExperience)) {
             if (unit.matchesFilter(unique.params[0]) && cityConstructions.city.matchesFilter(unique.params[2]))
-                XP += unique.params[1].toInt()
+                XP += unique.params[1].toIntLoose()
         }
         unit.promotions.XP = XP
 
@@ -478,8 +479,8 @@ class BaseUnit : RulesetObject(), INonPerpetualConstruction {
     override fun getResourceRequirementsPerTurn(state: GameContext?): Counter<String> {
         val resourceRequirements = Counter<String>()
         if (requiredResource != null) resourceRequirements[requiredResource!!] = 1
-        for (unique in getMatchingUniques(UniqueType.ConsumesResources, state ?: GameContext.EmptyState))
-            resourceRequirements.add(unique.params[1], unique.params[0].toInt())
+for (unique in getMatchingUniques(UniqueType.ConsumesResources, state ?: GameContext.EmptyState))
+            resourceRequirements.add(unique.params[1], unique.params[0].toIntLoose())
         return resourceRequirements
     }
 
@@ -496,7 +497,7 @@ class BaseUnit : RulesetObject(), INonPerpetualConstruction {
     @Readonly
     fun isProbablySiegeUnit() = isRanged()
             && getMatchingUniques(UniqueType.Strength, GameContext.IgnoreConditionals)
-                .any { it.params[0].toInt() > 0 && it.hasModifier(UniqueType.ConditionalVsCity) }
+                .any { it.params[0].toIntLoose() > 0 && it.hasModifier(UniqueType.ConditionalVsCity) }
 
 
     @Transient @Cache
@@ -545,10 +546,10 @@ class BaseUnit : RulesetObject(), INonPerpetualConstruction {
         for (unique in allUniques) {
             when (unique.type) {
                 UniqueType.Strength -> {
-                    if (unique.params[0].toInt() <= 0) continue
+if (unique.params[0].toIntLoose()<= 0) continue
                     
                     if (unique.hasModifier(UniqueType.ConditionalVsUnits)) { // Bonus vs some units - a quarter of the bonus
-                        highestConditionalPowerBonus = (unique.params[0].toInt() / 4f).toPercent()
+                        highestConditionalPowerBonus = (unique.params[0].toIntLoose() / 4f).toPercent()
                     } else if (
                         unique.modifiers.any {
                             it.type == UniqueType.ConditionalVsCity // City Attack - half the bonus
@@ -557,21 +558,21 @@ class BaseUnit : RulesetObject(), INonPerpetualConstruction {
                                 || it.type == UniqueType.ConditionalFightingInTiles
                         } // Bonus in terrain or feature - half the bonus
                     ) {
-                        highestConditionalPowerBonus = (unique.params[0].toInt() / 2f).toPercent()
+highestConditionalPowerBonus = (unique.params[0].toIntLoose()/ 2f).toPercent()
                     } else {
-                        highestConditionalPowerBonus = (unique.params[0].toInt()).toPercent() // Static bonus
+                        highestConditionalPowerBonus = (unique.params[0].toIntLoose()).toPercent() // Static bonus
                     }
                 }
                 UniqueType.StrengthNearCapital ->
-                    if (unique.params[0].toInt() > 0)
-                        power *= (unique.params[0].toInt() / 4f).toPercent()  // Bonus decreasing with distance from capital - not worth much most of the map???
+                    if (unique.params[0].toIntLoose() > 0)
+                        power *= (unique.params[0].toIntLoose() / 4f).toPercent()  // Bonus decreasing with distance from capital - not worth much most of the map???
 
                 UniqueType.MayParadrop // Paradrop - 25% bonus
                     -> power *= 1.25f
                 UniqueType.MustSetUp // Must set up - 20 % penalty
                     -> power /= 1.20f
                 UniqueType.AdditionalAttacks // Extra attacks - 20% bonus per extra attack
-                    -> power *= (unique.params[0].toInt() * 20f).toPercent()
+-> power *= (unique.params[0].toIntLoose()* 20f).toPercent()
                 else -> {}
             }
         }

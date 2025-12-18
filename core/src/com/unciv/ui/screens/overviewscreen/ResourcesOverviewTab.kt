@@ -63,11 +63,7 @@ class ResourcesOverviewTab(
     // UI should not surprise player, thus we need a deterministic and guessable order
     private val resources: List<TileResource> = allResources
         .map { it.resource }
-        .filter {
-            it.resourceType != ResourceType.Bonus &&
-            !it.hasUnique(UniqueType.NotShownOnWorldScreen, viewingPlayer.state) &&
-            !it.isCityWide // These are Civ-wide resources, so don't show the city-wide ones.
-        }
+        .filter { it.resourceType != ResourceType.Bonus && !it.hasUnique(UniqueType.NotShownOnWorldScreen, viewingPlayer.state) }
         .distinct()
         .sortedWith(
             compareBy<TileResource> { it.resourceType }

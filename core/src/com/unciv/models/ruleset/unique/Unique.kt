@@ -11,6 +11,7 @@ import com.unciv.models.translations.getModifiers
 import com.unciv.models.translations.getPlaceholderParameters
 import com.unciv.models.translations.getPlaceholderText
 import com.unciv.models.translations.removeConditionals
+import com.unciv.utils.toIntLoose
 import yairm210.purity.annotations.Readonly
 import kotlin.math.max
 
@@ -111,7 +112,7 @@ class Unique(val text: String, val sourceObjectType: UniqueTarget? = null, val s
         for (conditional in forEveryAmountModifiers) { // multiple multipliers DO multiply.
             val multiplier = Countables.getCountableAmount(conditional.params[1], gameContext)
                 ?: 0 // If the countable is invalid, ignore this unique entirely
-            val perEvery = conditional.params[0].toInt()
+            val perEvery = conditional.params[0].toIntLoose()
             amount *= multiplier / perEvery
         }
 

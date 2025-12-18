@@ -6,8 +6,8 @@ import com.unciv.logic.GameInfo
 import com.unciv.logic.GameInfoPreview
 import com.unciv.logic.event.EventBus
 import com.unciv.utils.debug
+import org.threeten.bp.Instant
 import yairm210.purity.annotations.Readonly
-import java.time.Instant
 import java.util.*
 
 /** Files that are stored locally */

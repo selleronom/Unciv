@@ -1,0 +1,41 @@
+# Fastfile for Unciv iOS
+# This file contains the fastlane automation configuration for iOS builds
+
+default_platform(:ios)
+
+platform :ios do
+  desc "Build IPA and upload to TestFlight (complete workflow)"
+  lane :build_and_deploy do
+    # Ensure we have the required environment variables
+    ensure_env_vars(
+      env_vars: ['FASTLANE_APPLE_APPLICATION_SPECIFIC_PASSWORD']
+    )
+
+    # Build the IPA using our custom build script
+    sh("cd .. && ./ios/build-for-testflight.sh")
+
+    # Upload to TestFlight
+    upload_to_testflight(
+      ipa: "./ios/build/robovm/Unciv.ipa",
+      skip_waiting_for_build_processing: true,
+      skip_submission: false,
+      changelog: ENV['CHANGELOG'] || "iOS build with RoboVM"
+    )
+  end
+
+  desc "Upload existing IPA to TestFlight (skip build step)"
+  lane :upload_ipa do
+    # Ensure we have the required environment variables
+    ensure_env_vars(
+      env_vars: ['FASTLANE_APPLE_APPLICATION_SPECIFIC_PASSWORD']
+    )
+
+    # Upload the IPA that was already built by build-for-testflight.sh
+    upload_to_testflight(
+      ipa: "./ios/build/robovm/Unciv.ipa",
+      skip_waiting_for_build_processing: true,
+      skip_submission: false,
+      changelog: ENV['CHANGELOG'] || "iOS build with RoboVM"
+    )
+  end
+end

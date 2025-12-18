@@ -36,7 +36,7 @@ class MapEditorWesnothImporter(private val editorScreen: MapEditorScreen) : Disp
         var lastFileFolder: FileHandle? = null
     }
 
-    private val ruleset by lazy { RulesetCache[BaseRuleset.Civ_V_GnK.fullName]!! }
+    private val ruleset by lazy { RulesetCache[BaseRuleset.Unciv_Basic.fullName]!! }
 
     private var importJob: Job? = null
 

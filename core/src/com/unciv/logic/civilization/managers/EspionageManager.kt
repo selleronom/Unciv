@@ -6,6 +6,7 @@ import com.unciv.logic.civilization.Civilization
 import com.unciv.logic.map.tile.Tile
 import com.unciv.models.Spy
 import com.unciv.models.ruleset.unique.UniqueType
+import com.unciv.utils.toIntLoose
 import yairm210.purity.annotations.Readonly
 
 
@@ -80,7 +81,7 @@ class EspionageManager : IsPartOfGameInfoSerialization {
 
     @Readonly fun getSpiesInCity(city: City): List<Spy> = spyList.filter { it.getCityOrNull() == city }
 
-    @Readonly fun getStartingSpyRank(): Int = 1 + civInfo.getMatchingUniques(UniqueType.SpyStartingLevel).sumOf { it.params[0].toInt() }
+    @Readonly fun getStartingSpyRank(): Int = 1 + civInfo.getMatchingUniques(UniqueType.SpyStartingLevel).sumOf { it.params[0].toIntLoose() }
 
     /**
      * Returns a list of all cities with our spies in them.

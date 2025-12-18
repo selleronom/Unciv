@@ -189,5 +189,23 @@ detekt/reports.html
 # When you test the wiki by running mkdocs locally:
 /site/
 
+# When running the desktop app locally using "gradlew desktop:run"
+GameSettings.json
+
+# iOS build artifacts
+ios/build/
+
 /buildSrc/.kotlin/errors/*
 /buildSrc/.kotlin/sessions/*
+
+# Fastlane credentials (NEVER commit these!)
+.env
+.env.default
+.env.*
+!.env.template
+
+# Ruby Bundler (for fastlane)
+Gemfile.lock
+vendor/bundle/
+
+report.xml

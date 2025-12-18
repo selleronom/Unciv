@@ -44,7 +44,7 @@ class GameParameters : IsPartOfGameInfoSerialization { // Default values are the
     var minutesUntilSkipTurn = 60 * 24
     var hoursUntilForceResign = 3 * 24
 
-    var baseRuleset: String = BaseRuleset.Civ_V_GnK.fullName
+    var baseRuleset: String = BaseRuleset.Unciv_Basic.fullName
     var mods = LinkedHashSet<String>()
 
     var maxTurns = 500

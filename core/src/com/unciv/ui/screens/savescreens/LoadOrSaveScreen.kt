@@ -207,7 +207,9 @@ abstract class LoadOrSaveScreen(
                     isPermissionDenied
                 }
                 else -> {
-                    errorText.append("Unhandled problem, [${ex::class.simpleName} ${ex.stackTraceToString()}]".tr())
+                    // Use javaClass.simpleName instead of ::class.simpleName to avoid Kotlin reflection on iOS
+                    // Kotlin reflection triggers Boolean.hashCode() which doesn't exist in RoboVM
+                    errorText.append("Unhandled problem, [${ex.javaClass.simpleName} ${ex.stackTraceToString()}]".tr())
                     false
                 }
             }

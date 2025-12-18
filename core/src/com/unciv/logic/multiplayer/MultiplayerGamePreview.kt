@@ -15,8 +15,8 @@ import com.unciv.utils.debug
 import com.unciv.utils.launchOnGLThread
 import com.unciv.utils.withGLContext
 import kotlinx.coroutines.coroutineScope
-import java.time.Duration
-import java.time.Instant
+import org.threeten.bp.Duration
+import org.threeten.bp.Instant
 import java.util.concurrent.atomic.AtomicReference
 
 

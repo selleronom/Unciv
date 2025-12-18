@@ -34,6 +34,7 @@ import com.unciv.models.stats.SubStat
 import com.unciv.models.translations.tr
 import com.unciv.ui.screens.civilopediascreen.ICivilopediaText
 import com.unciv.utils.Log
+import com.unciv.utils.toIntLoose
 import org.jetbrains.annotations.VisibleForTesting
 import yairm210.purity.annotations.Readonly
 import kotlin.collections.set
@@ -141,13 +142,13 @@ class Ruleset {
             for (unique in this@Ruleset.allUniques())
                 for (conditional in unique.modifiers){
                     if (conditional.type == UniqueType.ConditionalWhenBelowAmountStatResource
-                        && conditional.params[1] == "Happiness") yield(conditional.params[0].toInt())
+                        && conditional.params[1] == "Happiness") yield(conditional.params[0].toIntLoose())
                     if (conditional.type == UniqueType.ConditionalWhenAboveAmountStatResource
-                        && conditional.params[1] == "Happiness") yield(conditional.params[0].toInt())
+                        && conditional.params[1] == "Happiness") yield(conditional.params[0].toIntLoose())
                     if (conditional.type == UniqueType.ConditionalWhenBetweenStatResource
                         && conditional.params[2] == "Happiness"){
-                        yield(conditional.params[0].toInt())
-                        yield(conditional.params[1].toInt() + 1)
+                        yield(conditional.params[0].toIntLoose())
+                        yield(conditional.params[1].toIntLoose() + 1)
                     }
                     if (conditional.type == UniqueType.ConditionalHappy) yield(0)
                 }
@@ -176,7 +177,8 @@ class Ruleset {
         for (item in items) {
             val itemName = try { item.name }
             catch (ex: Exception) {
-                throw Exception("${T::class.simpleName} is missing a name!")
+                // Use T::class.java.simpleName instead of T::class.simpleName to avoid Kotlin reflection on iOS
+                throw Exception("${T::class.java.simpleName} is missing a name!")
             }
 
             hashMap[itemName] = item

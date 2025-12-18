@@ -26,8 +26,9 @@ import com.unciv.ui.screens.worldscreen.unit.presenter.CityPresenter
 import com.unciv.ui.screens.worldscreen.unit.presenter.SpyPresenter
 import com.unciv.ui.screens.worldscreen.unit.presenter.SummaryPresenter
 import com.unciv.ui.screens.worldscreen.unit.presenter.UnitPresenter
+import com.badlogic.gdx.scenes.scene2d.ui.Label
+import com.badlogic.gdx.utils.Align
 import yairm210.purity.annotations.Readonly
-import java.awt.Label
 
 class UnitTable(val worldScreen: WorldScreen) : Table() {
     private val prevIdleUnitButton =
@@ -35,7 +36,7 @@ class UnitTable(val worldScreen: WorldScreen) : Table() {
     private val nextIdleUnitButton =
         IdleUnitButton(this, worldScreen.mapHolder, false, KeyboardBinding.NextIdleButton)
     internal val unitIconHolder = Table()
-    internal val unitNameLabel = "".toLabel(fontSize = 24).apply { setAlignment(Label.CENTER) }
+    internal val unitNameLabel = "".toLabel(fontSize = 24).apply { setAlignment(Align.center) }
     internal val unitIconNameGroup = Table()
     internal val promotionsTable = Table().apply { defaults().padRight(5f) }
     internal val descriptionTable = Table(BaseScreen.skin)

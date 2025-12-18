@@ -28,8 +28,8 @@ import com.unciv.ui.screens.basescreen.BaseScreen
 import com.unciv.utils.Concurrency
 import com.unciv.utils.launchOnGLThread
 import com.unciv.utils.toGdxArray
-import java.time.Duration
-import java.time.temporal.ChronoUnit
+import org.threeten.bp.Duration
+import org.threeten.bp.temporal.ChronoUnit
 
 fun multiplayerTab(
     optionsPopup: OptionsPopup
@@ -379,4 +379,3 @@ private fun addSelectAsSeparateTable(tab: Table, settingsSelect: SettingsSelect<
     settingsSelect.addTo(table)
     tab.add(table).growX().fillX().row()
 }
-

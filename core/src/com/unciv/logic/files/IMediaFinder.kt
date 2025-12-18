@@ -15,7 +15,6 @@ import com.unciv.ui.audio.MusicController
 import com.unciv.ui.screens.civilopediascreen.FormattedLine
 import com.unciv.ui.images.ImageGetter
 import com.unciv.ui.popups.options.SettingsSelect
-import kotlin.reflect.full.declaredMemberProperties
 
 /**
  *  Encapsulate how media files are found and enumerated.
@@ -155,15 +154,34 @@ interface IMediaFinder {
         override fun getInternalMediaNames(folder: FileHandle) = uncivSoundNames.asSequence() + unitAttackSounds
 
         protected companion object {
-            // Warning: reflection monster to enumerate a non-enum.
-            fun uncivSoundNames() = UncivSound.Companion::class.declaredMemberProperties.asSequence()
-                .map { (it.get(UncivSound.Companion) as UncivSound).fileName }
+            // Avoid Kotlin reflection on iOS (RoboVM lacks some JDK methods used by kotlin-reflect)
+            fun uncivSoundNames(): Sequence<String> = sequenceOf(
+                UncivSound.Bombard.fileName,
+                UncivSound.Chimes.fileName,
+                UncivSound.Choir.fileName,
+                UncivSound.Click.fileName,
+                UncivSound.Coin.fileName,
+                UncivSound.Construction.fileName,
+                UncivSound.Fire.fileName,
+                UncivSound.Fortify.fileName,
+                UncivSound.Notification1.fileName,
+                UncivSound.Notification2.fileName,
+                UncivSound.Paper.fileName,
+                UncivSound.Policy.fileName,
+                UncivSound.Promote.fileName,
+                UncivSound.Setup.fileName,
+                UncivSound.Silent.fileName,
+                UncivSound.Slider.fileName,
+                UncivSound.Swap.fileName,
+                UncivSound.Upgrade.fileName,
+                UncivSound.Whoosh.fileName,
+            )
 
             // Extract Unit attack sounds from the larger vanilla ruleset
             // Remember this replaces enumeration over *bundled* assets - not necessary for mods
             // Keeps unit around not for this class but for the labeled version
             fun unitAttackSounds(): Sequence<Pair<BaseUnit, String>> {
-                val ruleset = RulesetCache[BaseRuleset.Civ_V_GnK.fullName] ?: return emptySequence()
+                val ruleset = RulesetCache[BaseRuleset.Unciv_Basic.fullName] ?: return emptySequence()
                 return ruleset.units.values.asSequence()
                     .filter { it.attackSound != null }
                     .distinctBy { it.attackSound }

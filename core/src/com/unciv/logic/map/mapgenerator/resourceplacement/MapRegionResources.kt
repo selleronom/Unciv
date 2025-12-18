@@ -12,6 +12,7 @@ import com.unciv.models.ruleset.tile.TileResource
 import com.unciv.models.ruleset.unique.GameContext
 import com.unciv.models.ruleset.unique.UniqueType
 import com.unciv.utils.randomWeighted
+import com.unciv.utils.toIntLoose
 import kotlin.random.Random
 
 /** This class deals with the internals of *how* to place resources in tiles
@@ -122,7 +123,7 @@ object MapRegionResources {
         if (tileList.isEmpty()) return mapOf()
 
         val frequency = if (terrain.hasUnique(UniqueType.MajorStrategicFrequency))
-            terrain.getMatchingUniques(UniqueType.MajorStrategicFrequency).first().params[0].toInt()
+            terrain.getMatchingUniques(UniqueType.MajorStrategicFrequency).first().params[0].toIntLoose()
         else 25
 
         val terrainRule = getTerrainRule(terrain, ruleset)
@@ -139,4 +140,3 @@ object MapRegionResources {
     }
 
 }
-

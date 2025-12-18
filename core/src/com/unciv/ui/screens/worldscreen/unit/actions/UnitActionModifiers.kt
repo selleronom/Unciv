@@ -9,6 +9,7 @@ import com.unciv.models.translations.removeConditionals
 import com.unciv.models.translations.tr
 import com.unciv.ui.components.fonts.FontRulesetIcons
 import com.unciv.ui.components.fonts.Fonts
+import com.unciv.utils.toIntLoose
 import yairm210.purity.annotations.Readonly
 import kotlin.math.ceil
 
@@ -31,7 +32,7 @@ object UnitActionModifiers {
             return unit.getMaxMovement()
         val movementCost = actionUnique.modifiers
             .filter { it.type == UniqueType.UnitActionMovementCost || it.type == UniqueType.UnitActionMovementCostRequired }
-            .maxOfOrNull { it.params[0].toInt() }
+            .maxOfOrNull { it.params[0].toIntLoose() }
 
         if (movementCost != null)
             return movementCost
@@ -43,7 +44,7 @@ object UnitActionModifiers {
         if (actionUnique.hasModifier(UniqueType.UnitActionMovementCostAll))
             return 1
         val movementCostRequired = actionUnique.getModifiers(UniqueType.UnitActionMovementCostRequired)
-            .minOfOrNull { it.params[0].toInt() }
+            .minOfOrNull { it.params[0].toIntLoose() }
         return movementCostRequired ?: 1
     }
 
@@ -72,12 +73,13 @@ object UnitActionModifiers {
     @Readonly
     private fun canSpendStockpileCost(unit: MapUnit, actionUnique: Unique): Boolean {
         for (conditional in actionUnique.getModifiers(UniqueType.UnitActionStockpileCost)) {
-            val amount = conditional.params[0].toInt()
+            val amount = conditional.params[0].toIntLoose()
             val resourceName = conditional.params[1]
             if (unit.civ.getResourceAmount(resourceName) < amount) {
                 return false
             }
         }
+
         return true
     }
 
@@ -121,7 +123,7 @@ object UnitActionModifiers {
                     }
                 }
                 UniqueType.UnitActionStockpileCost -> {
-                    val amount = conditional.params[0].toInt()
+                    val amount = conditional.params[0].toIntLoose()
                     val resourceName = conditional.params[1]
                     val resource = unit.civ.gameInfo.ruleset.tileResources[resourceName]
                     if (resource != null && resource.isStockpiled)
@@ -154,10 +156,10 @@ object UnitActionModifiers {
         val extraTimes = unit.getMatchingUniques(actionUnique.type!!)
             .filter { it.text.removeConditionals() == actionUnique.text.removeConditionals() }
             .flatMap { unique -> unique.getModifiers(UniqueType.UnitActionExtraLimitedTimes) }
-            .sumOf { it.params[0].toInt() }
+            .sumOf { it.params[0].toIntLoose() }
 
         val times = actionUnique.getModifiers(UniqueType.UnitActionLimitedTimes)
-            .maxOfOrNull { it.params[0].toInt() }
+            .maxOfOrNull { it.params[0].toIntLoose() }
         if (times != null) return times + extraTimes
         if (actionUnique.hasModifier(UniqueType.UnitActionOnce)) return 1 + extraTimes
 
@@ -188,7 +190,7 @@ object UnitActionModifiers {
         if (actionUnique.hasModifier(UniqueType.UnitActionStockpileCost)) {
             var stockpileString = ""
             for (conditionals in actionUnique.getModifiers(UniqueType.UnitActionStockpileCost))
-                stockpileString += " ${conditionals.params[0].toInt()} {${conditionals.params[1]}}"
+                stockpileString += " ${conditionals.params[0].toIntLoose()} {${conditionals.params[1]}}"
             effects += stockpileString.removePrefix(" ") // drop leading space
         }
 

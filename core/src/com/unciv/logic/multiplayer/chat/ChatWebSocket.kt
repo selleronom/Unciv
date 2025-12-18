@@ -4,8 +4,9 @@ import com.unciv.UncivGame
 import com.unciv.logic.multiplayer.chat.ChatWebSocket.job
 import com.unciv.logic.multiplayer.chat.ChatWebSocket.start
 import com.unciv.utils.Concurrency
+import com.unciv.utils.Log
 import io.ktor.client.*
-import io.ktor.client.engine.cio.*
+import io.ktor.client.engine.okhttp.*
 import io.ktor.client.plugins.websocket.*
 import io.ktor.client.request.*
 import io.ktor.http.*
@@ -25,7 +26,6 @@ import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.ClassDiscriminatorMode
 import kotlinx.serialization.json.Json
 import kotlin.random.Random
-import kotlin.time.Clock
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
 import kotlin.time.DurationUnit
@@ -86,30 +86,31 @@ object ChatWebSocket {
 
     private var isStarted = false
 
-    @OptIn(ExperimentalTime::class)
-    private var lastRetry = Clock.System.now()
+    private var lastRetryMillis = System.currentTimeMillis()
     private var reconnectionAttempts = 0
     private var reconnectTime = INITIAL_RECONNECT_TIME
 
     private var job: Job? = null
     private var session: DefaultClientWebSocketSession? = null
 
+    // iOS/RoboVM: Ktor engines may be unavailable. Initialize client only when Ktor is supported.
     @OptIn(ExperimentalSerializationApi::class)
-    private val client = HttpClient(CIO) {
-        install(WebSockets) {
-            pingInterval = 30.seconds
-            contentConverter = KotlinxWebsocketSerializationConverter(Json {
-                classDiscriminator = "type"
-                // DO NOT OMIT
-                // if omitted the "type" field will be missing from all outgoing messages
-                classDiscriminatorMode = ClassDiscriminatorMode.ALL_JSON_OBJECTS
-            })
+    private val client: HttpClient? = if (com.unciv.logic.UncivKtor.isKtorSupported()) {
+        HttpClient(OkHttp) {
+            install(WebSockets) {
+                pingInterval = 30.seconds
+                contentConverter = KotlinxWebsocketSerializationConverter(Json {
+                    classDiscriminator = "type"
+                    // DO NOT OMIT
+                    // if omitted the "type" field will be missing from all outgoing messages
+                    classDiscriminatorMode = ClassDiscriminatorMode.ALL_JSON_OBJECTS
+                })
+            }
         }
-    }
+    } else null
 
-    @OptIn(ExperimentalTime::class)
     private fun resetExponentialBackoff() {
-        lastRetry = Clock.System.now()
+        lastRetryMillis = System.currentTimeMillis()
 
         reconnectionAttempts = 0
         reconnectTime = INITIAL_RECONNECT_TIME
@@ -145,20 +146,20 @@ object ChatWebSocket {
         }
     }
 
-    @OptIn(ExperimentalTime::class)
     private fun handleWebSocketThrowables(t: Throwable) {
         print("ChatError: ${t.message}. Reconnecting...")
 
         if (reconnectionAttempts == 0) {
-            lastRetry = Clock.System.now()
+            lastRetryMillis = System.currentTimeMillis()
             ChatStore.relayGlobalMessage("WebSocket connection closed. Cause: [${t.cause}]")
             if (t.message?.contains("401") == true) {
                 ChatStore.relayGlobalMessage("Authentication issue detected! You have to set a password to use Chat.")
             }
         } else {
-            val now = Clock.System.now()
-            print(" (Last retry was ${(now - lastRetry).toString(DurationUnit.SECONDS, 2)} ago)")
-            lastRetry = now
+            val nowMillis = System.currentTimeMillis()
+            val elapsedSeconds = (nowMillis - lastRetryMillis) / 1000.0
+            print(" (Last retry was %.2f seconds ago)".format(elapsedSeconds))
+            lastRetryMillis = nowMillis
         }
 
         println()
@@ -168,6 +169,11 @@ object ChatWebSocket {
     private suspend fun startSession() {
         try {
             session?.close()
+            if (client == null) {
+                // WebSockets aren't supported on this platform (iOS/RoboVM). Abort starting session.
+                Log.debug("ChatWebSocket: Ktor WebSockets not supported on this platform; chat disabled.")
+                return
+            }
             session = client.webSocketSession {
                 url(getChatUrl())
                 userAgent(UncivGame.getUserAgent("Chat"))

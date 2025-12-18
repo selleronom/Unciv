@@ -44,7 +44,7 @@ internal object ConsoleLauncher {
 
     @ExperimentalTime
     private fun runSimulation() {
-        val ruleset = RulesetCache[BaseRuleset.Civ_V_GnK.fullName]!!
+        val ruleset = RulesetCache[BaseRuleset.Unciv_Basic.fullName]!!
 
         val simulationNation1 = Nation().apply { name = simulationCiv1 }
         ruleset.nations[simulationCiv1] = simulationNation1

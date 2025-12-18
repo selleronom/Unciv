@@ -15,10 +15,12 @@ import com.unciv.models.ruleset.BeliefType
 import com.unciv.models.ruleset.unique.UniqueTriggerActivation
 import com.unciv.models.ruleset.unique.UniqueType
 import com.unciv.models.ruleset.unit.BaseUnit
+import com.unciv.utils.toIntLoose
 import com.unciv.ui.components.extensions.toPercent
 import com.unciv.ui.screens.worldscreen.unit.actions.UnitActionModifiers
+import kotlin.math.min
 import yairm210.purity.annotations.Readonly
-import java.lang.Integer.min
+import kotlin.math.min
 import kotlin.math.roundToInt
 import kotlin.random.Random
 
@@ -400,13 +402,13 @@ class ReligionManager : IsPartOfGameInfoSerialization {
         chooseBeliefToAdd(BeliefType.Follower, 1)
 
         for (unique in civInfo.getMatchingUniques(UniqueType.FreeExtraBeliefs)) {
-            if (unique.params[2] != action) continue
-            val type = BeliefType.valueOf(unique.params[1])
-            chooseBeliefToAdd(type, unique.params[0].toInt())
+                if (unique.params[2] != action) continue
+                val type = BeliefType.valueOf(unique.params[1])
+                chooseBeliefToAdd(type, unique.params[0].toIntLoose())
         }
         for (unique in civInfo.getMatchingUniques(UniqueType.FreeExtraAnyBeliefs)) {
-            if (unique.params[1] != action) continue
-            chooseBeliefToAdd(BeliefType.Any, unique.params[0].toInt())
+                if (unique.params[1] != action) continue
+                chooseBeliefToAdd(BeliefType.Any, unique.params[0].toIntLoose())
         }
 
         for (type in freeBeliefsAsEnums())

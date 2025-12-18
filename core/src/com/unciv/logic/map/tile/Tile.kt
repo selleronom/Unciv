@@ -28,6 +28,7 @@ import com.unciv.ui.components.fonts.Fonts
 import com.unciv.utils.DebugUtils
 import com.unciv.utils.Log
 import com.unciv.utils.withItem
+import com.unciv.utils.toIntLoose
 import com.unciv.utils.withoutItem
 import yairm210.purity.annotations.Cache
 import yairm210.purity.annotations.LocalState
@@ -864,7 +865,7 @@ class Tile : IsPartOfGameInfoSerialization {
 
         for (unique in newResource.getMatchingUniques(UniqueType.ResourceAmountOnTiles, stateThisTile)) {
             if (matchesTerrainFilter(unique.params[0], null)) {
-                resourceAmount = unique.params[1].toInt()
+                resourceAmount = unique.params[1].toIntLoose()
                 return
             }
         }
@@ -897,7 +898,7 @@ class Tile : IsPartOfGameInfoSerialization {
         }
 
         unitHeight = allTerrains.flatMap { it.getMatchingUniques(UniqueType.VisibilityElevation) }
-            .map { it.params[0].toInt() }.sum()
+            .map { it.params[0].toIntLoose() }.sum()
         tileHeight = if (terrainHasUnique(UniqueType.BlocksLineOfSightAtSameElevation)) unitHeight + 1
         else unitHeight
     }

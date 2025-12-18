@@ -10,6 +10,7 @@ import com.unciv.logic.civilization.managers.EspionageManager
 import com.unciv.logic.map.HexCoord
 import com.unciv.models.ruleset.unique.Unique
 import com.unciv.models.ruleset.unique.UniqueType
+import com.unciv.utils.toIntLoose
 import yairm210.purity.annotations.Readonly
 import kotlin.math.ceil
 import kotlin.random.Random
@@ -445,8 +446,8 @@ class Spy private constructor() : IsPartOfGameInfoSerialization {
             }
         }
         var totalEfficiency = 1.0
-        totalEfficiency *= (100.0 + friendlyUniques.sumOf { it.params[0].toInt() }) / 100
-        totalEfficiency *= (100.0 + enemyUniques.sumOf { it.params[0].toInt() }) / 100
+        totalEfficiency *= (100.0 + friendlyUniques.sumOf { it.params[0].toIntLoose() }) / 100
+        totalEfficiency *= (100.0 + enemyUniques.sumOf { it.params[0].toIntLoose() }) / 100
         return totalEfficiency.coerceAtLeast(0.0)
     }
 

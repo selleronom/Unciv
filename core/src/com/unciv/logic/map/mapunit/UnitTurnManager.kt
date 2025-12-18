@@ -3,6 +3,7 @@ package com.unciv.logic.map.mapunit
 import com.unciv.logic.civilization.*
 import com.unciv.models.ruleset.unique.UniqueTriggerActivation
 import com.unciv.models.ruleset.unique.UniqueType
+import com.unciv.utils.toIntLoose
 
 class UnitTurnManager(val unit: MapUnit) {
 
@@ -42,7 +43,7 @@ class UnitTurnManager(val unit: MapUnit) {
         ) {
             val lostReligiousStrength =
                     unit.getMatchingUniques(UniqueType.CanEnterForeignTilesButLosesReligiousStrength)
-                        .map { it.params[0].toInt() }
+                        .map { it.params[0].toIntLoose() }
                         .minOrNull()
             if (lostReligiousStrength != null)
                 unit.religiousStrengthLost += lostReligiousStrength
@@ -81,7 +82,7 @@ class UnitTurnManager(val unit: MapUnit) {
                         && unit.civ.isAtWarWith(it.getOwner()!!)
             }.map { tile ->
                 tile to tile.getTileImprovement()!!.getMatchingUniques(UniqueType.DamagesAdjacentEnemyUnits, tile.stateThisTile)
-                    .sumOf { it.params[0].toInt() }
+                    .sumOf { it.params[0].toIntLoose() }
             }.maxByOrNull { it.second }
             ?: return
         if (damage == 0) return

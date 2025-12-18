@@ -13,6 +13,7 @@ import com.unciv.logic.map.mapunit.MapUnit
 import com.unciv.logic.map.tile.Tile
 import com.unciv.models.ruleset.unique.GameContext
 import com.unciv.models.ruleset.unique.UniqueType
+import com.unciv.utils.toIntLoose
 import yairm210.purity.annotations.Readonly
 import kotlin.math.min
 import kotlin.random.Random
@@ -71,7 +72,7 @@ object BattleUnitCapture {
         val state = GameContext(attacker.getCivInfo(), ourCombatant = attacker, theirCombatant = defender)
         for (unique in attacker.getMatchingUniques(UniqueType.GainFromDefeatingUnit, state, true)) {
             if (defender.unit.matchesFilter(unique.params[0])) {
-                attacker.getCivInfo().addGold(unique.params[1].toInt())
+                attacker.getCivInfo().addGold(unique.params[1].toIntLoose())
                 unitCaptured = true
             }
         }
@@ -87,7 +88,7 @@ object BattleUnitCapture {
 
         for (unique in attacker.getCivInfo()
             .getMatchingUniques(UniqueType.GainFromEncampment)) {
-            attacker.getCivInfo().addGold(unique.params[0].toInt())
+            attacker.getCivInfo().addGold(unique.params[0].toIntLoose())
             unitCaptured = true
         }
         return unitCaptured

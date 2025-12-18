@@ -15,6 +15,7 @@ import com.unciv.models.stats.StatMap
 import com.unciv.models.stats.Stats
 import com.unciv.ui.components.extensions.toPercent
 import com.unciv.utils.DebugUtils
+import com.unciv.utils.toIntLoose
 import yairm210.purity.annotations.InternalState
 import yairm210.purity.annotations.LocalState
 import yairm210.purity.annotations.Pure
@@ -221,7 +222,7 @@ class CityStats(val city: City) {
         // "[stats] per [amount] population [cityFilter]"
         for (unique in city.getMatchingUniques(UniqueType.StatsPerPopulation))
             if (city.matchesFilter(unique.params[2])) {
-                val amountOfEffects = (city.population.population / unique.params[1].toInt()).toFloat()
+                val amountOfEffects = (city.population.population / unique.params[1].toIntLoose()).toFloat()
                 sourceToStats.addStats(unique.stats.times(amountOfEffects), unique.getSourceNameForUser(), unique.sourceObjectName ?: "")
             }
 

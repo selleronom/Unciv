@@ -6,11 +6,10 @@ import com.unciv.utils.Concurrency
 import com.unciv.utils.Log
 import io.ktor.client.*
 import io.ktor.client.call.*
-import io.ktor.client.engine.cio.*
+import io.ktor.client.engine.okhttp.*
 import io.ktor.client.plugins.*
 import io.ktor.client.plugins.contentnegotiation.*
 import io.ktor.client.plugins.websocket.*
-import io.ktor.client.plugins.websocket.cio.*
 import io.ktor.client.request.*
 import io.ktor.http.*
 import io.ktor.serialization.kotlinx.*
@@ -42,25 +41,53 @@ open class ApiV2Wrapper(baseUrl: String) {
     }.toString()
 
     // HTTP client to handle the server connections, logging, content parsing and cookies
-    internal val client = HttpClient(CIO) {
-        // Do not add install(HttpCookies) because it will break Cookie handling
-        install(ContentNegotiation) {
-            json(Json {
-                prettyPrint = true
-                isLenient = true
-            })
+    // Lazy-initialize the client to avoid creating a Ktor client on unsupported platforms (iOS/RoboVM)
+    internal val client: HttpClient by lazy {
+        if (!com.unciv.logic.UncivKtor.isKtorSupported())
+            throw UncivNetworkException("Ktor client not available on this platform", null)
+
+        val c = HttpClient(OkHttp) {
+            // Do not add install(HttpCookies) because it will break Cookie handling
+            install(ContentNegotiation) {
+                json(Json {
+                    prettyPrint = true
+                    isLenient = true
+                })
+            }
+            install(HttpTimeout) {
+                requestTimeoutMillis = DEFAULT_REQUEST_TIMEOUT
+                connectTimeoutMillis = DEFAULT_CONNECT_TIMEOUT
+            }
+            install(WebSockets) {
+                // Pings are configured manually to enable re-connecting automatically, don't use `pingInterval`
+                contentConverter = KotlinxWebsocketSerializationConverter(Json)
+            }
+            defaultRequest {
+                url(baseUrlImpl)
+            }
         }
-        install(HttpTimeout) {
-            requestTimeoutMillis = DEFAULT_REQUEST_TIMEOUT
-            connectTimeoutMillis = DEFAULT_CONNECT_TIMEOUT
+
+        // Register the same HttpSend interceptor that was previously executed at construction time
+        c.plugin(HttpSend).intercept { request ->
+            request.userAgent(UncivGame.getUserAgent("Multiplayer-v2"))
+            val clientCall = try {
+                execute(request)
+            } catch (t: Throwable) {
+                Log.error("Failed to query API: %s %s\nURL: %s\nError %s:\n%s", request.method.value, request.url.encodedPath, request.url, t.localizedMessage, t.stackTraceToString())
+                throw t
+            }
+            Log.debug(
+                "'%s %s': %s (%d ms%s)",
+                request.method.value,
+                request.url.toString(),
+                clientCall.response.status,
+                clientCall.response.responseTime.timestamp - clientCall.response.requestTime.timestamp,
+                if (!request.url.protocol.isSecure()) ", insecure!" else ""
+            )
+            clientCall
         }
-        install(WebSockets) {
-            // Pings are configured manually to enable re-connecting automatically, don't use `pingInterval`
-            contentConverter = KotlinxWebsocketSerializationConverter(Json)
-        }
-        defaultRequest {
-            url(baseUrlImpl)
-        }
+
+        c
     }
 
     /** Helper that replaces library cookie storages to fix cookie serialization problems and keeps
@@ -113,37 +140,37 @@ open class ApiV2Wrapper(baseUrl: String) {
     /**
      * API for account management
      */
-    val account = AccountsApi(client, authHelper)
+    val account by lazy { AccountsApi(client, authHelper) }
 
     /**
      * API for authentication management
      */
-    val auth = AuthApi(client, authHelper, ::afterLogin, ::afterLogout)
+    val auth by lazy { AuthApi(client, authHelper, ::afterLogin, ::afterLogout) }
 
     /**
      * API for chat management
      */
-    val chat = ChatApi(client, authHelper)
+    val chat by lazy { ChatApi(client, authHelper) }
 
     /**
      * API for friendship management
      */
-    val friend = FriendApi(client, authHelper)
+    val friend by lazy { FriendApi(client, authHelper) }
 
     /**
      * API for game management
      */
-    val game = GameApi(client, authHelper)
+    val game by lazy { GameApi(client, authHelper) }
 
     /**
      * API for invite management
      */
-    val invite = InviteApi(client, authHelper)
+    val invite by lazy { InviteApi(client, authHelper) }
 
     /**
      * API for lobby management
      */
-    val lobby = LobbyApi(client, authHelper)
+    val lobby by lazy { LobbyApi(client, authHelper) }
 
     /**
      * Start a new WebSocket connection
@@ -157,9 +184,10 @@ open class ApiV2Wrapper(baseUrl: String) {
     internal suspend fun websocket(handler: suspend (ClientWebSocketSession) -> Unit, jobCallback: ((Job) -> Unit)? = null): Boolean {
         Log.debug("Starting a new WebSocket connection ...")
 
-        coroutineScope {
+        return coroutineScope {
             try {
-                val session = client.webSocketRawSession {
+                // iOS/RoboVM: Java engine uses webSocketSession instead of webSocketRawSession
+                val session = client.webSocketSession {
                     authHelper.add(this)
                     url {
                         protocol = if (Url(baseServer).protocol.isSecure()) URLProtocol.WSS else URLProtocol.WS
@@ -178,14 +206,12 @@ open class ApiV2Wrapper(baseUrl: String) {
                 true
             } catch (e: SerializationException) {
                 Log.debug("Failed to create a WebSocket: %s", e.localizedMessage)
-                return@coroutineScope false
+                false
             } catch (e: Exception) {
                 Log.debug("Failed to establish WebSocket connection: %s", e.localizedMessage)
-                return@coroutineScope false
+                false
             }
         }
-
-        return true
     }
 
     /**

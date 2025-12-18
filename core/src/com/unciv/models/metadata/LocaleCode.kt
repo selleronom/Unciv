@@ -1,6 +1,6 @@
 package com.unciv.models.metadata
 
-import yairm210.purity.annotations.Cache
+import yairm210.purity.annotations.LocalState
 import yairm210.purity.annotations.Readonly
 import java.text.NumberFormat
 import java.util.Locale
@@ -46,7 +46,6 @@ enum class LocaleCode(val languageTag: String, private val fastlaneFolder: Strin
     Latvian("lv-LV"),
     Lithuanian("lt-LT"),
     Malay("ms-MY"),
-    Maltese("mt-MT"),
     Norwegian("no-NO"),
     NorwegianNynorsk("nn-NO"),
     PersianPinglishDIN("fa-IR"), // These might just fall back to default
@@ -69,21 +68,33 @@ enum class LocaleCode(val languageTag: String, private val fastlaneFolder: Strin
     Zulu("zu-ZA")
     ;
 
-    @Readonly fun locale(): Locale = Locale.forLanguageTag(languageTag)
+    fun locale(): Locale = parseLanguageTag(languageTag)
+
+    /** Minimal parser for IETF BCP 47 language tags without relying on Locale.forLanguageTag (not present on iOS). */
+    private fun parseLanguageTag(tag: String): Locale {
+        if (tag.isBlank()) return Locale.getDefault()
+        val parts = tag.replace('_', '-').split('-')
+        val language = parts.getOrNull(0)?.lowercase() ?: return Locale.getDefault()
+        // Find first 2-letter region subtag; ignore script/variants/extensions
+        var country = ""
+        for (i in 1 until parts.size) {
+            val p = parts[i]
+            if (p.length == 2 && p.all { it.isLetter() }) { country = p.uppercase(); break }
+        }
+        return if (country.isNotEmpty()) Locale(language, country) else Locale(language)
+    }
     fun fastlaneFolder(): String = this.fastlaneFolder ?: locale().language
 
     companion object {
         private val bannedCharacters = listOf(' ', '_', '-', '(', ')') // Things not to have in enum names
 
         /** Find a LocaleCode for a [language] as stored in GameSettings */
-        @Readonly
         fun find(language: String): LocaleCode? {
             val languageName = language.filterNot { it in bannedCharacters }
             return LocaleCode.entries.firstOrNull { it.name == languageName }
         }
 
         /** Get a Java Locale for a [language] as stored in GameSettings */
-        @Readonly
         fun getLocale(language: String): Locale =
             find(language)?.locale() ?: Locale.getDefault()
 
@@ -92,9 +103,9 @@ enum class LocaleCode(val languageTag: String, private val fastlaneFolder: Strin
             find(language)?.fastlaneFolder() ?: "en"
 
         // NumberFormat cache, key: language, value: NumberFormat
-        @Cache private val languageToNumberFormat = mutableMapOf<String, NumberFormat>()
+        private val languageToNumberFormat = mutableMapOf<String, NumberFormat>()
 
-        @Readonly
+        @Readonly @Suppress("purity")  // Cache is safe - getOrPut maintains referential transparency
         fun getNumberFormatFromLanguage(language: String): NumberFormat =
             languageToNumberFormat.getOrPut(language) {
                 NumberFormat.getInstance(getLocale(language))

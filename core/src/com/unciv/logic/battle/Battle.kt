@@ -18,6 +18,7 @@ import com.unciv.models.stats.SubStat
 import com.unciv.ui.components.UnitMovementMemoryType
 import com.unciv.ui.screens.worldscreen.unit.actions.UnitActionsPillage
 import com.unciv.utils.debug
+import com.unciv.utils.toIntLoose
 import yairm210.purity.annotations.Pure
 import yairm210.purity.annotations.Readonly
 import kotlin.math.max
@@ -403,7 +404,7 @@ object Battle {
 
         if (attacker is MapUnitCombatant)
             for (unique in attacker.unit.getTriggeredUniques(UniqueType.TriggerUponLosingHealth)
-                    { it.params[0].toInt() <= defenderDamageDealt }) {
+                    { it.params[0].toIntLoose() <= defenderDamageDealt }) {
                 val unit = if (unique.params[0] == Constants.targetUnit && defender is MapUnitCombatant)
                     defender.unit
                 else attacker.unit
@@ -412,7 +413,7 @@ object Battle {
 
         if (defender is MapUnitCombatant)
             for (unique in defender.unit.getTriggeredUniques(UniqueType.TriggerUponLosingHealth)
-                    { it.params[0].toInt() <= attackerDamageDealt }) {
+                    { it.params[0].toIntLoose() <= attackerDamageDealt }) {
                 val unit = if (unique.params[0] == Constants.targetUnit && attacker is MapUnitCombatant)
                 attacker.unit
                 else defender.unit
@@ -519,7 +520,7 @@ object Battle {
         if (attacker !is MapUnitCombatant) return
         
         for (unique in attacker.unit.getMatchingUniques(UniqueType.HealsAfterKilling, checkCivInfoUniques = true)) {
-            val amountToHeal = unique.params[0].toInt()
+            val amountToHeal = unique.params[0].toIntLoose()
             attacker.unit.healBy(amountToHeal)
         }
     }
@@ -573,7 +574,7 @@ object Battle {
 
         val baseXP = amount + thisCombatant
             .getMatchingUniques(UniqueType.FlatXPGain, gameContext, true)
-            .sumOf { it.params[0].toInt() }
+            .sumOf { it.params[0].toIntLoose() }
 
         val xpBonus = thisCombatant
             .getMatchingUniques(UniqueType.PercentageXPGain, gameContext, true)
@@ -662,7 +663,7 @@ object Battle {
                 ?: continue
             attackerCiv.addGameResource(
                 resource,
-                unique.params[0].toInt() * city.cityStats.currentCityStats[Stat.valueOf(unique.params[1])].toInt()
+                unique.params[0].toIntLoose() * city.cityStats.currentCityStats[Stat.valueOf(unique.params[1])].toInt()
             )
         }
 

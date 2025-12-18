@@ -14,6 +14,7 @@ import com.unciv.models.ruleset.Ruleset
 import com.unciv.models.ruleset.unique.GameContext
 import com.unciv.models.ruleset.unique.UniqueType
 import com.unciv.ui.screens.victoryscreen.RankingType
+import com.unciv.utils.toIntLoose
 import yairm210.purity.annotations.Readonly
 import kotlin.math.ceil
 import kotlin.math.min
@@ -172,7 +173,7 @@ class TradeEvaluation {
                 
                 val lowestExplicitBuyCost = civInfo.gameInfo.ruleset.tileResources[offer.name]!!
                     .getMatchingUniques(UniqueType.AiWillBuyAt, GameContext(civInfo))
-                    .minOfOrNull { it.params[0].toInt() }
+                    .minOfOrNull { it.params[0].toIntLoose() }
 
                 if (lowestExplicitBuyCost != null) return lowestExplicitBuyCost
 
@@ -197,7 +198,7 @@ class TradeEvaluation {
 
                 val lowestExplicitBuyCost = civInfo.gameInfo.ruleset.tileResources[offer.name]!!
                     .getMatchingUniques(UniqueType.AiWillBuyAt, GameContext(civInfo))
-                    .minOfOrNull { it.params[0].toInt() }
+                    .minOfOrNull { it.params[0].toIntLoose() }
                 if (lowestExplicitBuyCost != null) return lowestExplicitBuyCost
 
                 val canUseForBuildings = civInfo.cities
@@ -214,7 +215,7 @@ class TradeEvaluation {
             TradeOfferType.Stockpiled_Resource -> {
                 val resource = civInfo.gameInfo.ruleset.tileResources[offer.name] ?: return 0
                 val lowestBuyCost = resource.getMatchingUniques(UniqueType.AiWillBuyAt, GameContext(civInfo))
-                    .minOfOrNull { it.params[0].toInt() }
+                    .minOfOrNull { it.params[0].toIntLoose() }
                 return lowestBuyCost ?: 0
             }
 
@@ -377,7 +378,7 @@ class TradeEvaluation {
             TradeOfferType.Luxury_Resource -> {
                 val lowestExplicitSellCost = civInfo.gameInfo.ruleset.tileResources[offer.name]!!
                     .getMatchingUniques(UniqueType.AiWillSellAt, GameContext(civInfo))
-                    .minOfOrNull { it.params[0].toInt() }
+                    .minOfOrNull { it.params[0].toIntLoose() }
 
                 if (lowestExplicitSellCost != null) return lowestExplicitSellCost
                 
@@ -398,7 +399,7 @@ class TradeEvaluation {
                 
                 val lowestExplicitSellCost = civInfo.gameInfo.ruleset.tileResources[offer.name]!!
                     .getMatchingUniques(UniqueType.AiWillSellAt, GameContext(civInfo))
-                    .minOfOrNull { it.params[0].toInt() }
+                    .minOfOrNull { it.params[0].toIntLoose() }
                 
                 if (lowestExplicitSellCost != null) return lowestExplicitSellCost
 
@@ -429,7 +430,7 @@ class TradeEvaluation {
             TradeOfferType.Stockpiled_Resource -> {
                 val resource = civInfo.gameInfo.ruleset.tileResources[offer.name] ?: return 0
                 val lowestSellCost = resource.getMatchingUniques(UniqueType.AiWillSellAt, GameContext(civInfo))
-                    .minOfOrNull { it.params[0].toInt() }
+                    .minOfOrNull { it.params[0].toIntLoose() }
                 return lowestSellCost ?: Int.MAX_VALUE
             }
             TradeOfferType.Technology -> return sqrt(civInfo.gameInfo.ruleset.technologies[offer.name]!!.cost.toDouble()).toInt() * 20
@@ -554,6 +555,6 @@ class TradeEvaluation {
     private fun introductionValue(ruleSet: Ruleset): Int {
         val unique = ruleSet.modOptions.getMatchingUniques(UniqueType.TradeCivIntroductions).firstOrNull()
             ?: return 0
-        return unique.params[0].toInt()
+        return unique.params[0].toIntLoose()
     }
 }

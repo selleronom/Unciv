@@ -22,12 +22,15 @@ buildscript {
         val kotlinVersion: String by project
         classpath("org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlinVersion")
         classpath("com.android.tools.build:gradle:8.9.3")
+        classpath("com.mobidevelop.robovm:robovm-gradle-plugin:2.3.24")
     }
 }
 
 // Fixes the error "Please initialize at least one Kotlin target in 'Unciv (:)'"
 kotlin {
     jvm()
+    // Force Kotlin to use a Java 21 toolchain to avoid JDK 24 incompatibilities
+    jvmToolchain(21)
     java {
         // required for building Unciv with a Java version higher than 24 (e.g. Java 25)
         sourceCompatibility = JavaVersion.VERSION_21
@@ -93,6 +96,13 @@ allprojects {
         maven { url = uri("https://oss.sonatype.org/content/repositories/releases/") }
         maven { url = uri("https://jitpack.io") } // for java-discord-rpc
     }
+
+        // Ensure Java-based plugins use Java 21 toolchain (fixes Gradle test reporting errors on JDK 24)
+        plugins.withType(org.gradle.api.plugins.JavaPlugin::class.java) {
+            the<org.gradle.api.plugins.JavaPluginExtension>().toolchain.languageVersion.set(
+                org.gradle.jvm.toolchain.JavaLanguageVersion.of(21)
+            )
+        }
 }
 
 project(":desktop") {
@@ -171,6 +181,27 @@ if (getSdkPath() != null) {
         }
     }
 }
+    if (System.getProperty("os.name").contains("Mac")) {
+        project(":ios") {
+            apply(plugin = "kotlin")
+            apply(plugin = "robovm")
+
+            // Disable test tasks for iOS (not applicable with RoboVM)
+            tasks.withType(org.gradle.api.tasks.testing.Test::class.java).configureEach {
+                enabled = false
+            }
+
+            dependencies {
+                "implementation"(project(":core"))
+                "implementation"("com.badlogicgames.gdx:gdx-backend-robovm:$gdxVersion")
+                "implementation"("com.badlogicgames.gdx:gdx-platform:$gdxVersion:natives-ios")
+                "implementation"("org.jetbrains.kotlinx:kotlinx-coroutines-core:$coroutinesVersion")
+            }
+        }
+    }
+
+// iOS module configuration removed to avoid test task conflicts
+// iOS can be built independently using its own build.gradle.kts
 
 
 project(":core") {
@@ -182,11 +213,15 @@ project(":core") {
         "implementation"("com.badlogicgames.gdx:gdx:$gdxVersion")
         "implementation"("org.jetbrains.kotlinx:kotlinx-coroutines-core:$coroutinesVersion")
         "implementation"("org.jetbrains.kotlin:kotlin-reflect:$kotlinVersion")
+    // Backport of java.time for RoboVM/iOS
+    "implementation"("org.threeten:threetenbp:1.6.8")
 
         "implementation"("io.github.yairm210:purity-annotations:1.3.0")
 
         "implementation"("io.ktor:ktor-client-core:$ktorVersion")
         "implementation"("io.ktor:ktor-client-cio:$ktorVersion")
+        "implementation"("io.ktor:ktor-client-okhttp:$ktorVersion")  // RoboVM/iOS compatibility
+        "implementation"("com.squareup.okhttp3:okhttp:4.12.0")  // Direct OkHttp for iOS (no Kotlin reflection)
         "implementation"("io.ktor:ktor-client-websockets:$ktorVersion")
         // Gzip transport encoding
         "implementation"("io.ktor:ktor-client-encoding:$ktorVersion")

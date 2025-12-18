@@ -1,5 +1,7 @@
 package com.unciv.logic.event
 
+import com.badlogic.gdx.Application
+import com.badlogic.gdx.Gdx
 import com.unciv.logic.event.EventBus.send
 import java.lang.ref.WeakReference
 import kotlin.reflect.KClass
@@ -50,11 +52,49 @@ object EventBus {
     }
 
     private fun getSuperClasses(kClass: KClass<*>): List<KClass<*>> {
+        // iOS/RoboVM: Kotlin reflection doesn't work, use manual mapping
+        if (Gdx.app.type == Application.ApplicationType.iOS) {
+            return getSuperClassesManual(kClass)
+        }
+        
         if (kClass.supertypes.size == 1 && kClass.supertypes[0] == Any::class) return emptyList()
         return kClass.supertypes
             .map { it.classifier as KClass<*> }
             .flatMap { getSuperClasses(it) + it }
             .filter { it != Any::class }
+    }
+    
+    /** iOS-compatible manual event hierarchy mapping (no reflection) */
+    @Suppress("UNCHECKED_CAST")
+    private fun getSuperClassesManual(kClass: KClass<*>): List<KClass<*>> {
+        // Use Java class name to avoid Kotlin reflection (kClass.simpleName uses reflection)
+        val className = kClass.java.simpleName
+        
+        // Manual mapping of event hierarchy based on OnlineMultiplayerEvents.kt
+        return when (className) {
+            "MultiplayerGameUpdated" -> listOf(
+                com.unciv.logic.multiplayer.MultiplayerGameUpdateEnded::class,
+                com.unciv.logic.multiplayer.MultiplayerGameUpdateSucceeded::class,
+                com.unciv.logic.multiplayer.HasMultiplayerGameName::class
+            )
+            "MultiplayerGameUpdateFailed" -> listOf(
+                com.unciv.logic.multiplayer.MultiplayerGameUpdateEnded::class,
+                com.unciv.logic.multiplayer.HasMultiplayerGameName::class
+            )
+            "MultiplayerGameUpdateUnchanged" -> listOf(
+                com.unciv.logic.multiplayer.MultiplayerGameUpdateEnded::class,
+                com.unciv.logic.multiplayer.MultiplayerGameUpdateSucceeded::class,
+                com.unciv.logic.multiplayer.HasMultiplayerGameName::class
+            )
+            "MultiplayerGameUpdateStarted" -> listOf(
+                com.unciv.logic.multiplayer.HasMultiplayerGameName::class
+            )
+            "MultiplayerGameNameChanged" -> listOf(
+                com.unciv.logic.multiplayer.HasMultiplayerGameName::class
+            )
+            // Add other event hierarchies as needed
+            else -> emptyList()
+        }
     }
 
     /** Removes all listeners whose WeakReference got collected and returns the ones that are still active */

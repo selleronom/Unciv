@@ -29,6 +29,7 @@ import com.unciv.models.stats.GameResource
 import com.unciv.models.stats.INamed
 import com.unciv.models.stats.Stat
 import com.unciv.models.stats.SubStat
+import com.unciv.utils.toIntLoose
 import com.unciv.utils.withoutItem
 import yairm210.purity.annotations.Readonly
 import java.util.EnumSet
@@ -298,7 +299,7 @@ class City : IsPartOfGameInfoSerialization, INamed {
     @Readonly fun getMaxAirUnits(): Int = civ.gameInfo.ruleset.modOptions.constants.cityAirUnitCapacity +
         getMatchingUniques(UniqueType.CarryExtraAirUnits)
             .filter { it.params[1] == "Air" }
-            .sumOf { it.params[0].toInt() }
+            .sumOf { it.params[0].toIntLoose() }
 
     override fun toString() = name // for debug
 

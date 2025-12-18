@@ -1,0 +1,56 @@
+<config>
+  <executableName>Unciv</executableName>
+  <mainClass>com.unciv.app.ios.IOSLauncher</mainClass>
+  <iosInfoPList>Info.plist.xml</iosInfoPList>
+  
+  <!-- Add our custom Java stubs to the bootclasspath to override RoboVM's rt.jar -->
+  <bootclasspath>
+    <classpathentry>build/classes/java/main</classpathentry>
+  </bootclasspath>
+  
+  <resources>
+    <resource>
+      <directory>../android/assets</directory>
+      <excludes>
+        <!-- Exclude Civ V rulesets from iOS -->
+        <exclude>jsons/Civ V - Vanilla/**</exclude>
+        <exclude>jsons/Civ V - Gods &amp; Kings/**</exclude>
+      </excludes>
+    </resource>
+    <resource>
+      <directory>build/compiled-assets</directory>
+      <includes>
+        <include>Assets.car</include>
+      </includes>
+    </resource>
+  </resources>
+  <forceLinkClasses>
+    <pattern>com.badlogic.gdx.scenes.scene2d.ui.*</pattern>
+    <pattern>com.badlogic.gdx.graphics.g2d.**</pattern>
+    <pattern>com.unciv.**</pattern>
+  <!-- Kotlin reflection impl sometimes loaded via Class.forName -->
+  <pattern>kotlin.reflect.jvm.internal.ReflectionFactoryImpl</pattern>
+  <!-- Suppress attempts to load Android SSL providers on iOS -->
+  <pattern>com.android.org.conscrypt.**</pattern>
+  <pattern>com.android.okhttp.**</pattern>
+  <pattern>org.apache.harmony.security.provider.**</pattern>
+  <pattern>com.android.org.bouncycastle.**</pattern>
+  </forceLinkClasses>
+  <libs>
+    <lib>z</lib>
+  </libs>
+  <frameworks>
+    <framework>UIKit</framework>
+    <framework>OpenGLES</framework>
+    <framework>QuartzCore</framework>
+    <framework>CoreGraphics</framework>
+    <framework>CoreText</framework>
+    <framework>OpenAL</framework>
+    <framework>AudioToolbox</framework>
+    <framework>AVFoundation</framework>
+    <framework>GameController</framework>
+    <!-- Modern iOS rendering stack -->
+    <framework>Metal</framework>
+    <framework>MetalKit</framework>
+  </frameworks>
+</config>

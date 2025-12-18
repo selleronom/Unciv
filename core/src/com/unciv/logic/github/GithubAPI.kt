@@ -1,27 +1,29 @@
 package com.unciv.logic.github
 
+import com.badlogic.gdx.Application
 import com.badlogic.gdx.Files
+import com.badlogic.gdx.Gdx
 import com.badlogic.gdx.files.FileHandle
 import com.unciv.UncivGame
 import com.unciv.json.json
 import com.unciv.logic.UncivKtor
 import com.unciv.logic.UncivShowableException
+import com.unciv.utils.Log
 import com.unciv.logic.github.Github.repoNameToFolderName
 import io.ktor.client.plugins.*
+import io.ktor.client.HttpClient
 import io.ktor.client.request.*
 import io.ktor.client.statement.*
 import io.ktor.http.*
 import io.ktor.utils.io.jvm.javaio.*
 import kotlinx.coroutines.delay
+import com.unciv.logic.multiplayer.apiv2.UncivNetworkException
 import yairm210.purity.annotations.Pure
 import yairm210.purity.annotations.Readonly
 import java.util.zip.ZipException
 import java.util.zip.ZipInputStream
 import kotlinx.coroutines.Job
 import kotlin.coroutines.coroutineContext
-import kotlin.time.Clock
-import kotlin.time.ExperimentalTime
-import kotlin.time.Instant
 
 enum class DownloadAndExtractState {
     Downloading {
@@ -62,13 +64,16 @@ object GithubAPI {
      */
     const val bearerToken = ""
 
-    private val client = UncivKtor.client.config {
-        defaultRequest {
-            url(baseUrl)
-            header("X-GitHub-Api-Version", "2022-11-28")
-            header(HttpHeaders.Accept, "application/vnd.github+json")
-            userAgent(UncivGame.getUserAgent("Github"))
-            if (bearerToken.isNotBlank()) bearerAuth(bearerToken)
+    private fun clientForRequest(): HttpClient? {
+        if (!com.unciv.logic.UncivKtor.isKtorSupported()) return null
+        return com.unciv.logic.UncivKtor.client.config {
+            defaultRequest {
+                url(baseUrl)
+                header("X-GitHub-Api-Version", "2022-11-28")
+                header(HttpHeaders.Accept, "application/vnd.github+json")
+                userAgent(UncivGame.getUserAgent("Github"))
+                if (bearerToken.isNotBlank()) bearerAuth(bearerToken)
+            }
         }
     }
 
@@ -79,7 +84,8 @@ object GithubAPI {
         maxRateLimitedRetries: Int = 3,
         block: HttpRequestBuilder.() -> Unit,
     ): HttpResponse {
-        val resp = client.request(block)
+    val ktorClient = clientForRequest() ?: throw UncivNetworkException("Ktor client not available on this platform", null)
+        val resp = ktorClient.request(block)
         val rateLimited = consumeRateLimit(resp)
 
         return if (rateLimited) {
@@ -117,7 +123,6 @@ object GithubAPI {
     /**
      * Wait for rate limit to end if any and returns true if there was any rate limit
      */
-    @OptIn(ExperimentalTime::class)
     private suspend fun consumeRateLimit(resp: HttpResponse): Boolean {
         if (resp.status != HttpStatusCode.Forbidden && resp.status != HttpStatusCode.TooManyRequests) return false
 
@@ -125,7 +130,8 @@ object GithubAPI {
         if (remainingRequests < 1) return false
 
         val resetEpoch = resp.headers["x-ratelimit-reset"]?.toLongOrNull() ?: 0
-        delay(Instant.fromEpochSeconds(resetEpoch) - Clock.System.now())
+        val delayMs = (resetEpoch * 1000) - System.currentTimeMillis()
+        if (delayMs > 0) kotlinx.coroutines.delay(delayMs.coerceAtMost(60000))
 
         return true
     }
@@ -217,9 +223,29 @@ object GithubAPI {
 
             /** Query Github API for [owner]'s [repoName] repository metadata */
             suspend fun query(owner: String, repoName: String): Repo? {
+                // iOS/RoboVM: Use SimpleHttpClient to avoid Kotlin reflection crash
+                if (Gdx.app.type == Application.ApplicationType.iOS) {
+                    return querySimple(owner, repoName)
+                }
+                
                 val resp = fetchSingleRepo(owner, repoName)
                 return if (!resp.status.isSuccess()) null
                 else json().fromJson(Repo::class.java, resp.bodyAsText())
+            }
+            
+            /**
+             * iOS-compatible version using SimpleHttpClient (no Kotlin reflection)
+             */
+            private suspend fun querySimple(owner: String, repoName: String): Repo? {
+                val url = "${baseUrl}/repos/$owner/$repoName"
+                
+                try {
+                    val text = SimpleHttpClient.getWithRetry(url)
+                    return json().fromJson(Repo::class.java, text)
+                } catch (e: Exception) {
+                    Log.debug("Failed to query GitHub repo $owner/$repoName", e)
+                    return null
+                }
             }
         }
     }
@@ -421,6 +447,8 @@ object GithubAPI {
         if (unzipDestination.exists())
             if (unzipDestination.isDirectory) unzipDestination.deleteDirectory() else unzipDestination.delete()
 
+        var downloadFailed = false
+
         // Thanks to: https://stackoverflow.com/a/74328603/10585461
         UncivKtor.client.prepareRequest {
             url(zipUrl)
@@ -432,8 +460,7 @@ object GithubAPI {
              * See: https://github.com/yairm210/Unciv/blob/1cb3f94d36009719b63f6d8e9d2e49c1bd594a8f/core/src/com/unciv/logic/github/Github.kt#L197-L216
              */
             when {
-                resp.status == HttpStatusCode.NotFound -> return@execute resp
-
+                resp.status == HttpStatusCode.NotFound -> downloadFailed = true
                 (resp.status == HttpStatusCode.Forbidden) &&
                     resp.headers["CF-RAY"] != null && resp.headers["cf-mitigated"].orEmpty() == "challenge" ->
                     throw UncivShowableException("Blocked by Cloudflare")
@@ -445,20 +472,24 @@ object GithubAPI {
                     throw UncivShowableException("Unexpected response: [${resp.bodyAsText()}]")
 
                 resp.status.value in 500..599 ->
-                    throw UncivShowableException("Server failure: [${resp.bodyAsText()}}]")
+                    throw UncivShowableException("Server failure: [${resp.bodyAsText()}]")
 
                 !resp.status.isSuccess() ->
-                    throw UncivShowableException("Unknown Issue!\nStatus: ${resp.status}\nBody:[${resp.bodyAsText()}}]")
+                    throw UncivShowableException("Unknown Issue!\nStatus: ${resp.status}\nBody:[${resp.bodyAsText()}]")
             }
+            
+            if (!downloadFailed) {
+                val disposition = resp.headers[HttpHeaders.ContentDisposition]
+                modNameFromFileName = parseNameFromDisposition(disposition, modNameFromFileName)
 
-            val disposition = resp.headers[HttpHeaders.ContentDisposition]
-            modNameFromFileName = parseNameFromDisposition(disposition, modNameFromFileName)
-
-            val stream = resp.bodyAsChannel().toInputStream()
-            ZipInputStream(stream).use { zipstream ->
-                extractZipStream(zipstream, unzipDestination)
+                val stream = resp.bodyAsChannel().toInputStream()
+                ZipInputStream(stream).use { zipstream ->
+                    extractZipStream(zipstream, unzipDestination)
+                }
             }
         }
+        
+        if (downloadFailed) return null
 
         if (unzipDestination.exists() && unzipDestination.list().isEmpty()) {
             unzipDestination.deleteDirectory()

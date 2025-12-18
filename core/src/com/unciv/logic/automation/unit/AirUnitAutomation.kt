@@ -9,6 +9,7 @@ import com.unciv.logic.civilization.Civilization
 import com.unciv.logic.map.mapunit.MapUnit
 import com.unciv.logic.map.tile.Tile
 import com.unciv.models.ruleset.unique.UniqueType
+import com.unciv.utils.toIntLoose
 import yairm210.purity.annotations.Pure
 import yairm210.purity.annotations.Readonly
 
@@ -33,7 +34,7 @@ object AirUnitAutomation {
         if (friendlyUsedFighterCount <= enemyFighters) {
             @Readonly fun airSweepDamagePercentBonus(): Int {
                 return unit.getMatchingUniques(UniqueType.StrengthWhenAirsweep)
-                    .sumOf { it.params[0].toInt() }
+                    .sumOf { it.params[0].toIntLoose() }
             }
 
             // If we are outnumbered, don't heal after attacking and don't have an Air Sweep bonus

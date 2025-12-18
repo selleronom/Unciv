@@ -18,6 +18,7 @@ import com.unciv.models.UnitActionType
 import com.unciv.models.ruleset.Ruleset
 import com.unciv.models.ruleset.tile.TileImprovement
 import com.unciv.models.ruleset.unique.*
+import com.unciv.utils.toIntLoose
 import com.unciv.models.ruleset.unit.BaseUnit
 import com.unciv.models.ruleset.unit.UnitType
 import com.unciv.models.translations.tr
@@ -178,7 +179,8 @@ class MapUnit : IsPartOfGameInfoSerialization {
         constructor() : this(HexCoord.Zero, UnitMovementMemoryType.UnitMoved)
 
         @Readonly fun clone() = UnitMovementMemory(position, type)
-        override fun toString() = "${this::class.simpleName}($position, $type)"
+        // Use javaClass instead of ::class to avoid Kotlin reflection on iOS
+        override fun toString() = "${this.javaClass.simpleName}($position, $type)"
     }
 
     //region pure functions
@@ -347,7 +349,7 @@ class MapUnit : IsPartOfGameInfoSerialization {
         val resourceRequirements = Counter<String>()
         if (baseUnit.requiredResource != null) resourceRequirements[baseUnit.requiredResource!!] = 1
         for (unique in getMatchingUniques(UniqueType.ConsumesResources, cache.state))
-            resourceRequirements.add(unique.params[1], unique.params[0].toInt())
+            resourceRequirements.add(unique.params[1], unique.params[0].toIntLoose())
         return resourceRequirements
     }
 
@@ -369,7 +371,7 @@ class MapUnit : IsPartOfGameInfoSerialization {
                 else baseUnit.movement
 
         movement += getMatchingUniques(UniqueType.Movement, checkCivInfoUniques = true)
-                .sumOf { it.params[0].toInt() }
+                .sumOf { it.params[0].toIntLoose() }
 
         if (movement < 1) movement = 1
 
@@ -407,7 +409,7 @@ class MapUnit : IsPartOfGameInfoSerialization {
 
         val relevantUniques = getMatchingUniques(UniqueType.Sight, conditionalState, checkCivInfoUniques = true) +
                 getTile().getMatchingUniques(UniqueType.Sight, conditionalState)
-        visibilityRange += relevantUniques.sumOf { it.params[0].toInt() }
+    visibilityRange += relevantUniques.sumOf { it.params[0].toIntLoose() }
 
         if (visibilityRange < 1) visibilityRange = 1
 
@@ -417,7 +419,7 @@ class MapUnit : IsPartOfGameInfoSerialization {
     @Readonly
     fun maxAttacksPerTurn(): Int {
         return 1 + getMatchingUniques(UniqueType.AdditionalAttacks, checkCivInfoUniques = true)
-                .sumOf { it.params[0].toInt() }
+                .sumOf { it.params[0].toIntLoose() }
     }
 
     @Readonly
@@ -432,7 +434,7 @@ class MapUnit : IsPartOfGameInfoSerialization {
         if (baseUnit.isMelee()) return 1
         var range = baseUnit.range
         range += getMatchingUniques(UniqueType.Range, checkCivInfoUniques = true)
-                .sumOf { it.params[0].toInt() }
+                .sumOf { it.params[0].toIntLoose() }
         return range
     }
 
@@ -470,7 +472,7 @@ class MapUnit : IsPartOfGameInfoSerialization {
 
     @Readonly
     private fun adjacentHealingBonus(): Int {
-        return getMatchingUniques(UniqueType.HealAdjacentUnits).sumOf { it.params[0].toInt() }
+    return getMatchingUniques(UniqueType.HealAdjacentUnits).sumOf { it.params[0].toIntLoose() }
     }
 
     @Readonly
@@ -503,7 +505,7 @@ class MapUnit : IsPartOfGameInfoSerialization {
         @Suppress("KotlinConstantConditions") // Warning is right, but `return healing` reads nicer than `return 0`
         if (!mayHeal) return healing
 
-        healing += getMatchingUniques(UniqueType.Heal, checkCivInfoUniques = true).sumOf { it.params[0].toInt() }
+    healing += getMatchingUniques(UniqueType.Heal, checkCivInfoUniques = true).sumOf { it.params[0].toIntLoose() }
 
         val healingCity = tile.getTilesInDistance(1).firstOrNull {
             it.isCityCenter() && it.getCity()!!.getMatchingUniques(UniqueType.CityHealingUnits).any()
@@ -511,7 +513,7 @@ class MapUnit : IsPartOfGameInfoSerialization {
         if (healingCity != null) {
             for (unique in healingCity.getMatchingUniques(UniqueType.CityHealingUnits)) {
                 if (!matchesFilter(unique.params[0]) || !isAlly(healingCity.civ)) continue // only heal our units or allied units
-                healing += unique.params[1].toInt()
+                healing += unique.params[1].toIntLoose()
             }
         }
 
@@ -542,7 +544,7 @@ class MapUnit : IsPartOfGameInfoSerialization {
     @Readonly
     fun getInterceptionRange(): Int {
         val rangeFromUniques = getMatchingUniques(UniqueType.AirInterceptionRange, checkCivInfoUniques = true)
-                .sumOf { it.params[0].toInt() }
+                .sumOf { it.params[0].toIntLoose() }
         return baseUnit.interceptRange + rangeFromUniques
     }
 
@@ -559,13 +561,13 @@ class MapUnit : IsPartOfGameInfoSerialization {
 
     @Readonly
     fun interceptChance(): Int {
-        return getMatchingUniques(UniqueType.ChanceInterceptAirAttacks).sumOf { it.params[0].toInt() }
+    return getMatchingUniques(UniqueType.ChanceInterceptAirAttacks).sumOf { it.params[0].toIntLoose() }
     }
 
     @Readonly
     fun interceptDamagePercentBonus(): Int {
         return getMatchingUniques(UniqueType.DamageWhenIntercepting)
-                .sumOf { it.params[0].toInt() }
+                .sumOf { it.params[0].toIntLoose() }
     }
 
     @Readonly
@@ -593,7 +595,7 @@ class MapUnit : IsPartOfGameInfoSerialization {
         return (getMatchingUniques(UniqueType.CarryAirUnits)
                 + getMatchingUniques(UniqueType.CarryExtraAirUnits))
                 .filter { unit.matchesFilter(it.params[1]) }
-                .sumOf { it.params[0].toInt() }
+                .sumOf { it.params[0].toIntLoose() }
     }
 
     @Readonly

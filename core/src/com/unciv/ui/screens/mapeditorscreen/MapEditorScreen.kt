@@ -97,7 +97,7 @@ class MapEditorScreen(map: TileMap? = null) : BaseScreen(), RecreateOnResize {
 
     init {
         if (map == null) {
-            ruleset = RulesetCache[BaseRuleset.Civ_V_GnK.fullName]!!
+            ruleset = RulesetCache[BaseRuleset.Unciv_Basic.fullName]!!
             tileMap = TileMap(MapSize.Tiny.radius, ruleset, false).apply {
                 mapParameters.mapSize = MapSize.Tiny
             }

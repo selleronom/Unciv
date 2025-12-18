@@ -9,6 +9,7 @@ import com.unciv.models.UncivSound
 import com.unciv.models.ruleset.unique.GameContext
 import com.unciv.models.ruleset.unique.UniqueType
 import com.unciv.models.ruleset.unit.UnitType
+import com.unciv.utils.toIntLoose
 import com.unciv.ui.components.extensions.toPercent
 import yairm210.purity.annotations.Readonly
 import kotlin.math.pow
@@ -49,7 +50,9 @@ class CityCombatant(val city: City) : ICombatant {
         strength += (city.population.population * modConstants.cityStrengthPerPop) // Each 5 pop gives 2 defence
         val cityTile = city.getCenterTile()
         for (unique in cityTile.allTerrains.flatMap { it.getMatchingUniques(UniqueType.GrantsCityStrength) })
-            strength += unique.params[0].toInt()
+            // Some JVMs (e.g., RoboVM on iOS) don't accept leading '+' in parseInt
+            // Unique params may be formatted like "+5"; strip optional leading '+' before parsing
+                    strength += unique.params[0].toIntLoose()
         // as tech progresses so does city strength
         val techCount = getCivInfo().gameInfo.ruleset.technologies.size
         val techsPercentKnown: Float = if (techCount > 0) city.civ.tech.techsResearched.size.toFloat() / techCount else 0.5f // for mods with no tech

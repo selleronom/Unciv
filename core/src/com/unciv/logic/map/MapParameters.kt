@@ -65,7 +65,7 @@ class MapParameters : IsPartOfGameInfoSerialization {
 
     /** This is used mainly for the map editor, so you can continue editing a map under the same ruleset you started with */
     var mods = LinkedHashSet<String>()
-    var baseRuleset = BaseRuleset.Civ_V_GnK.fullName // Hardcoded as the RulesetCache is not yet initialized when starting up
+    var baseRuleset = BaseRuleset.Unciv_Basic.fullName // Hardcoded as the RulesetCache is not yet initialized when starting up
 
     /** Unciv Version of creation for support cases */
     var createdWithVersion = ""

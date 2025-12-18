@@ -9,6 +9,7 @@ import com.unciv.models.ruleset.unique.UniqueTarget
 import com.unciv.models.ruleset.unique.UniqueType
 import com.unciv.models.translations.tr
 import com.unciv.ui.components.extensions.toPercent
+import com.unciv.utils.toIntLoose
 import yairm210.purity.annotations.LocalState
 import yairm210.purity.annotations.Pure
 import yairm210.purity.annotations.Readonly
@@ -57,7 +58,7 @@ object BattleDamage {
 
         } else if (combatant is CityCombatant) {
             for (unique in combatant.city.getMatchingUniques(UniqueType.StrengthForCities, conditionalState)) {
-                modifiers.add(getModifierStringFromUnique(unique), unique.params[0].toInt())
+                modifiers.add(getModifierStringFromUnique(unique), unique.params[0].toIntLoose())
             }
         }
 
@@ -97,7 +98,7 @@ object BattleDamage {
         val modifiers = Counter<String>()
 
         for (unique in combatant.getMatchingUniques(UniqueType.Strength, conditionalState, true)) {
-            modifiers.add(getModifierStringFromUnique(unique), unique.params[0].toInt())
+            modifiers.add(getModifierStringFromUnique(unique), unique.params[0].toIntLoose())
         }
 
         // e.g., Mehal Sefari https://civilization.fandom.com/wiki/Mehal_Sefari_(Civ5)
@@ -108,7 +109,7 @@ object BattleDamage {
             val distance =
                 combatant.getTile().aerialDistanceTo(civInfo.getCapital()!!.getCenterTile())
             // https://steamcommunity.com/sharedfiles/filedetails/?id=326411722#464287
-            val effect = unique.params[0].toInt() - 3 * distance
+            val effect = unique.params[0].toIntLoose() - 3 * distance
             if (effect > 0)
                 modifiers.add("${unique.sourceObjectName} (${unique.getSourceNameForUser()})", effect)
         }
@@ -126,7 +127,7 @@ object BattleDamage {
             .filter { combatant.matchesFilter(it.params[1]) && combatant.getTile().matchesFilter(it.params[2]) }
             .maxByOrNull { it.params[0] }
         if (strengthMalus != null) {
-            modifiers.add("Adjacent enemy units", strengthMalus.params[0].toInt())
+            modifiers.add("Adjacent enemy units", strengthMalus.params[0].toIntLoose())
         }
         return modifiers
     }
@@ -216,7 +217,7 @@ object BattleDamage {
 
         if (attacker is MapUnitCombatant) {
             for (unique in attacker.unit.getMatchingUniques(UniqueType.StrengthWhenAirsweep)) {
-                modifiers.add(getModifierStringFromUnique(unique), unique.params[0].toInt())
+                modifiers.add(getModifierStringFromUnique(unique), unique.params[0].toIntLoose())
             }
         }
 

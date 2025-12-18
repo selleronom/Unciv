@@ -11,6 +11,7 @@ import com.unciv.models.ruleset.unit.BaseUnit
 import com.unciv.models.stats.Stat
 import com.unciv.utils.addToMapOfSets
 import com.unciv.utils.contains
+import com.unciv.utils.toIntLoose
 import com.unciv.utils.yieldAllNotNull
 import yairm210.purity.annotations.Readonly
 
@@ -109,7 +110,7 @@ class CivConstructions : IsPartOfGameInfoSerialization {
             .filter { !it.hasTriggerConditional() }
             .groupBy { it.params[0] }
             .mapKeys { Stat.valueOf(it.key) }
-            .mapValues { unique -> unique.value.sumOf { it.params[1].toInt() } }
+            .mapValues { unique -> unique.value.sumOf { it.params[1].toIntLoose() } }
 
         for ((stat, amount) in statUniquesData) {
             addFreeStatBuildings(stat, amount)
@@ -132,7 +133,7 @@ class CivConstructions : IsPartOfGameInfoSerialization {
         val buildingsUniquesData = civInfo.getMatchingUniques(UniqueType.FreeSpecificBuildings)
             .filter { !it.hasTriggerConditional() }
             .groupBy { it.params[0] }
-            .mapValues { unique -> unique.value.sumOf { it.params[1].toInt() } }
+            .mapValues { unique -> unique.value.sumOf { it.params[1].toIntLoose() } }
 
         for ((building, amount) in buildingsUniquesData) {
             val civBuildingEquivalent = civInfo.getEquivalentBuilding(building)

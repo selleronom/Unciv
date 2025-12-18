@@ -64,14 +64,10 @@ class ChatButton(val worldScreen: WorldScreen) : IconTextButton(
     }
 
     init {
-        width = 95f
-        iconCell.pad(3f).center()
-        addActor(badge)
-        updateBadge()
+        println("DEBUG ChatButton: Constructor started")
+        setSize(50f, 50f)
 
         onClick {
-            chat.unreadCount = 0
-            ChatStore.hasGlobalMessage = false
             updateBadge()
 
             ChatPopup(chat, worldScreen).open()
@@ -95,9 +91,11 @@ class ChatButton(val worldScreen: WorldScreen) : IconTextButton(
             updateBadge()
             true
         } else {
+            println("DEBUG ChatButton: Not multiplayer or chat not supported, stopping ChatWebSocket")
             ChatWebSocket.stop()
             false
         }
+        println("DEBUG ChatButton refreshVisibility: Completed, isVisible=$isVisible")
     }
 
     fun updatePosition() = setPosition(

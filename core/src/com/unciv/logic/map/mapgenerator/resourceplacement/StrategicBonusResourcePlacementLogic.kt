@@ -16,6 +16,7 @@ import com.unciv.models.ruleset.unique.GameContext
 import com.unciv.models.ruleset.unique.Unique
 import com.unciv.models.ruleset.unique.UniqueType
 import com.unciv.utils.randomWeighted
+import com.unciv.utils.toIntLoose
 import kotlin.math.min
 import kotlin.random.Random
 
@@ -238,7 +239,7 @@ object StrategicBonusResourcePlacementLogic {
                     if (it.generatesNaturallyOn(tile)) 1f else 0f
                 } else {
                     val uniques = it.getMatchingUniques(UniqueType.MinorDepositWeighting, conditionalTerrain).toList()
-                    uniques.sumOf { unique -> unique.params[0].toInt() }.toFloat()
+                    uniques.sumOf { unique -> unique.params[0].toIntLoose() }.toFloat()
                 }
             }
             if (weightings.sum() <= 0) continue

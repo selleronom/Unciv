@@ -13,6 +13,7 @@ import com.unciv.models.stats.Stat
 import com.unciv.models.stats.Stat.Companion.statsUsableToBuy
 import com.unciv.ui.components.extensions.toPercent
 import com.unciv.ui.components.fonts.Fonts
+import com.unciv.utils.toIntLoose
 import yairm210.purity.annotations.Pure
 import yairm210.purity.annotations.Readonly
 import kotlin.math.pow
@@ -102,8 +103,8 @@ interface INonPerpetualConstruction : IConstruction, INamed, IHasUniques {
         // Can be purchased for [amount] [Stat] [cityFilter]
         val lowestCostUnique = getMatchingUniques(UniqueType.CanBePurchasedForAmountStat, conditionalState)
             .filter { it.params[1] == stat.name && city.matchesFilter(it.params[2]) }
-            .minByOrNull { it.params[0].toInt() }
-        if (lowestCostUnique != null) return lowestCostUnique.params[0].toInt() * city.civ.gameInfo.speed.statCostModifiers[stat]!!
+            .minByOrNull { it.params[0].toIntLoose() }
+        if (lowestCostUnique != null) return lowestCostUnique.params[0].toIntLoose() * city.civ.gameInfo.speed.statCostModifiers[stat]!!
 
         if (stat == Stat.Gold) return getBaseGoldCost(city.civ, city).toFloat()
 
@@ -126,15 +127,27 @@ interface INonPerpetualConstruction : IConstruction, INamed, IHasUniques {
 
     @Readonly
     override fun requiredResources(state: GameContext): Set<String> {
-        return getResourceRequirementsPerTurn(state).keys +
-                getMatchingUniques(UniqueType.CostsResources, state).map { it.params[1] }
+        return requiredResourcesSafe(state)
+    }
+    
+    @Readonly
+    private fun requiredResourcesSafe(state: GameContext): Set<String> {
+        val perTurnResources = getResourceRequirementsPerTurn(state)?.keys ?: emptySet()
+        
+        // iOS/RoboVM: Convert Sequence to List first to avoid RoboVM Sequence bugs
+        val uniquesList = getMatchingUniques(UniqueType.CostsResources, state).toList()
+        val costResources = uniquesList
+            .mapNotNull { it.params.getOrNull(1) }
+            .toSet()
+            
+        return perTurnResources + costResources
     }
     
     @Readonly
     override fun getStockpiledResourceRequirements(state: GameContext): Counter<String> {
         val counter = Counter<String>()
         for (unique in getMatchingUniquesNotConflicting(UniqueType.CostsResources, state)){
-            var amount = unique.params[0].toInt()
+            var amount = unique.params[0].toIntLoose()
             if (unique.isModifiedByGameSpeed()) amount = (amount * state.gameInfo!!.speed.modifier).toInt()
             counter.add(unique.params[1], amount)
         }

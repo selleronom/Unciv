@@ -8,6 +8,7 @@ import com.unciv.logic.trade.Trade
 import com.unciv.logic.trade.TradeOffer
 import com.unciv.logic.trade.TradeOfferType
 import com.unciv.models.ruleset.unique.UniqueType
+import com.unciv.utils.toIntLoose
 import com.unciv.ui.components.extensions.toPercent
 import yairm210.purity.annotations.Readonly
 import kotlin.math.absoluteValue
@@ -145,7 +146,7 @@ object DiplomacyTurnManager {
                 civInfo.gameInfo.civilizations.any { civInfo.isAtWarWith(it) && otherCiv.isAtWarWith(it) }) {
                 for (unique in civInfo.getMatchingUniques(UniqueType.CityStateMoreGiftedUnits)) {
                     flagsCountdown[DiplomacyFlags.ProvideMilitaryUnit.name] =
-                        flagsCountdown[DiplomacyFlags.ProvideMilitaryUnit.name]!! - unique.params[0].toInt() + 1
+                        flagsCountdown[DiplomacyFlags.ProvideMilitaryUnit.name]!! - unique.params[0].toIntLoose() + 1
                     if (flagsCountdown[DiplomacyFlags.ProvideMilitaryUnit.name]!! <= 0) {
                         flagsCountdown[DiplomacyFlags.ProvideMilitaryUnit.name] = 0
                         break
@@ -348,8 +349,8 @@ object DiplomacyTurnManager {
 
         for (unique in provideMilitaryUnitUniques) {
             // Reset the countdown if it has ended, or if we have longer to go than the current maximum (can happen when going from friend to ally)
-            if (!hasFlag(DiplomacyFlags.ProvideMilitaryUnit) || getFlag(DiplomacyFlags.ProvideMilitaryUnit) > unique.params[0].toInt()) {
-                setFlag(DiplomacyFlags.ProvideMilitaryUnit, unique.params[0].toInt() + variance)
+            if (!hasFlag(DiplomacyFlags.ProvideMilitaryUnit) || getFlag(DiplomacyFlags.ProvideMilitaryUnit) > unique.params[0].toIntLoose()) {
+                setFlag(DiplomacyFlags.ProvideMilitaryUnit, unique.params[0].toIntLoose() + variance)
             }
         }
     }

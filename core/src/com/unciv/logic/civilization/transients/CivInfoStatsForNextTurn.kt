@@ -11,6 +11,7 @@ import com.unciv.models.ruleset.tile.TileImprovement
 import com.unciv.models.ruleset.unique.GameContext
 import com.unciv.models.ruleset.unique.UniqueTarget
 import com.unciv.models.ruleset.unique.UniqueType
+import com.unciv.utils.toIntLoose
 import com.unciv.models.stats.Stat
 import com.unciv.models.stats.StatMap
 import com.unciv.models.stats.Stats
@@ -35,7 +36,7 @@ class CivInfoStatsForNextTurn(val civInfo: Civilization) {
         val baseUnitCost = 0.5f
         var freeUnits = 3
         for (unique in civInfo.getMatchingUniques(UniqueType.FreeUnits, civInfo.state)) {
-            freeUnits += unique.params[0].toInt()
+            freeUnits += unique.params[0].toIntLoose()
         }
 
         var unitsToPayFor = civInfo.units.getCivUnits()
@@ -142,13 +143,13 @@ class CivInfoStatsForNextTurn(val civInfo: Civilization) {
     @Readonly
     fun getBaseUnitSupply(): Int {
         return civInfo.getDifficulty().unitSupplyBase +
-            civInfo.getMatchingUniques(UniqueType.BaseUnitSupply).sumOf { it.params[0].toInt() }
+            civInfo.getMatchingUniques(UniqueType.BaseUnitSupply).sumOf { it.params[0].toIntLoose() }
     }
     @Readonly
     fun getUnitSupplyFromCities(): Int {
         return civInfo.cities.size *
             (civInfo.getDifficulty().unitSupplyPerCity
-                    + civInfo.getMatchingUniques(UniqueType.UnitSupplyPerCity).sumOf { it.params[0].toInt() })
+                    + civInfo.getMatchingUniques(UniqueType.UnitSupplyPerCity).sumOf { it.params[0].toIntLoose() })
     }
     @Readonly
     fun getUnitSupplyFromPop(): Int {
@@ -157,7 +158,7 @@ class CivInfoStatsForNextTurn(val civInfo: Civilization) {
         for (unique in civInfo.getMatchingUniques(UniqueType.UnitSupplyPerPop)) {
             val applicablePopulation = civInfo.cities
                 .filter { it.matchesFilter(unique.params[2]) }
-                .sumOf { it.population.population / unique.params[1].toInt() }
+                .sumOf { it.population.population / unique.params[1].toIntLoose() }
             totalSupply += unique.params[0].toDouble() * applicablePopulation
         }
         return totalSupply.toInt()
@@ -237,7 +238,7 @@ class CivInfoStatsForNextTurn(val civInfo: Civilization) {
 
         var happinessPerUniqueLuxury = 4f + civInfo.getDifficulty().extraHappinessPerLuxury
         for (unique in civInfo.getMatchingUniques(UniqueType.BonusHappinessFromLuxury))
-            happinessPerUniqueLuxury += unique.params[0].toInt()
+            happinessPerUniqueLuxury += unique.params[0].toIntLoose()
 
         val ownedLuxuries = civInfo.getCivResourceSupply().map { it.resource }
             .filter { it.resourceType == ResourceType.Luxury }
@@ -250,7 +251,7 @@ class CivInfoStatsForNextTurn(val civInfo: Civilization) {
         statMap["Luxury resources"] = relevantLuxuries * happinessPerUniqueLuxury
 
         val happinessBonusForCityStateProvidedLuxuries =
-            civInfo.getMatchingUniques(UniqueType.CityStateLuxuryHappiness).sumOf { it.params[0].toInt() } / 100f
+            civInfo.getMatchingUniques(UniqueType.CityStateLuxuryHappiness).sumOf { it.params[0].toIntLoose() } / 100f
 
         val luxuriesProvidedByCityStates = civInfo.getKnownCivs().asSequence()
             .filter { it.isCityState && it.allyCiv == civInfo }
@@ -272,7 +273,7 @@ class CivInfoStatsForNextTurn(val civInfo: Civilization) {
         statMap["Traded Luxuries"] =
             luxuriesAllOfWhichAreTradedAway.size * happinessPerUniqueLuxury *
                     civInfo.getMatchingUniques(UniqueType.RetainHappinessFromLuxury)
-                        .sumOf { it.params[0].toInt() } / 100f
+                        .sumOf { it.params[0].toIntLoose() } / 100f
 
         for (city in civInfo.cities) {
             // There appears to be a concurrency problem? In concurrent thread in ConstructionsTable.getConstructionButtonDTOs
@@ -317,7 +318,7 @@ class CivInfoStatsForNextTurn(val civInfo: Civilization) {
 
         for (unique in civInfo.getMatchingUniques(UniqueType.StatsPerPolicies)) {
             val amount = civInfo.policies.getAdoptedPolicies()
-                .count { !Policy.isBranchCompleteByName(it) } / unique.params[1].toInt()
+                .count { !Policy.isBranchCompleteByName(it) } / unique.params[1].toIntLoose()
             statMap.add("Policies", unique.stats.times(amount))
         }
 
@@ -326,7 +327,7 @@ class CivInfoStatsForNextTurn(val civInfo: Civilization) {
                 statMap.add(unique.getSourceNameForUser(), unique.stats)
 
         for (unique in civInfo.getMatchingUniques(UniqueType.StatsPerStat)) {
-            val amount = civInfo.getStatReserve(Stat.valueOf(unique.params[2])) / unique.params[1].toInt()
+            val amount = civInfo.getStatReserve(Stat.valueOf(unique.params[2])) / unique.params[1].toIntLoose()
             statMap.add("Stats", unique.stats.times(amount))
         }
 

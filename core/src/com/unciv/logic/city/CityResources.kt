@@ -6,9 +6,10 @@ import com.unciv.models.ruleset.tile.ResourceSupplyList
 import com.unciv.models.ruleset.tile.ResourceType
 import com.unciv.models.ruleset.unique.GameContext
 import com.unciv.models.ruleset.unique.UniqueType
+import com.unciv.models.ruleset.unique.UniqueParameterType
+import com.unciv.utils.toIntLoose
 import yairm210.purity.annotations.LocalState
 import yairm210.purity.annotations.Readonly
-import com.unciv.models.ruleset.unique.UniqueParameterType
 
 object CityResources {
 
@@ -97,7 +98,7 @@ object CityResources {
                 val resource = city.getRuleset().tileResources[unique.params[1]] ?: continue
                 resourceSupplyList.add(
                     resource, "Improvements",
-                    -1 * unique.params[0].toInt()
+                    -1 * unique.params[0].toIntLoose()
                 )
             }
         }

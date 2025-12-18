@@ -6,6 +6,7 @@ import com.unciv.logic.map.tile.Tile
 import com.unciv.models.ruleset.tile.TileImprovement
 import com.unciv.models.ruleset.unique.GameContext
 import com.unciv.models.ruleset.unique.UniqueType
+import com.unciv.utils.toIntLoose
 import yairm210.purity.annotations.Readonly
 
 object ImprovementFunctions {
@@ -42,11 +43,11 @@ object ImprovementFunctions {
                 yield(ImprovementBuildingProblem.Obsolete)
 
             if (improvement.getMatchingUniques(UniqueType.ConsumesResources, gameContext)
-                    .any { civInfo.getResourceAmount(it.params[1]) < it.params[0].toInt() })
+                    .any { civInfo.getResourceAmount(it.params[1]) < it.params[0].toIntLoose() })
                 yield(ImprovementBuildingProblem.MissingResources)
 
             if (improvement.getMatchingUniques(UniqueType.CostsResources)
-                    .any { civInfo.getResourceAmount(it.params[1]) < it.params[0].toInt() *
+                    .any { civInfo.getResourceAmount(it.params[1]) < it.params[0].toIntLoose() *
                             (if (it.isModifiedByGameSpeed()) civInfo.gameInfo.speed.modifier else 1f) })
                 yield(ImprovementBuildingProblem.MissingResources)
             

@@ -44,7 +44,7 @@ class WorldScreenMenuPopup(
             buttonCount * (prefHeight - emptyPrefHeight) + emptyPrefHeight < maxPopupHeight
         firstCell.nextColumn()
 
-        addButton("Civilopedia", KeyboardBinding.Civilopedia) {
+        addButton("Uncivpedia", KeyboardBinding.Civilopedia) {
             close()
             worldScreen.openCivilopedia()
         }.nextColumn()

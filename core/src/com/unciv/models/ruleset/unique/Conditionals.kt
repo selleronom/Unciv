@@ -8,6 +8,7 @@ import com.unciv.logic.civilization.Civilization
 import com.unciv.logic.civilization.managers.ReligionState
 import com.unciv.models.ruleset.validation.ModCompatibility
 import com.unciv.models.stats.Stat
+import com.unciv.utils.toIntLoose
 import yairm210.purity.annotations.Readonly
 import kotlin.random.Random
 
@@ -113,9 +114,9 @@ object Conditionals {
 
         return when (conditional.type) {
             UniqueType.ConditionalChance -> getStateBasedRandom(state, unique) < conditional.params[0].toFloat() / 100f
-            UniqueType.ConditionalEveryTurns -> checkOnGameInfo { turns % conditional.params[0].toInt() == 0 }
-            UniqueType.ConditionalBeforeTurns -> checkOnGameInfo { turns < conditional.params[0].toInt() }
-            UniqueType.ConditionalAfterTurns -> checkOnGameInfo { turns >= conditional.params[0].toInt() }
+            UniqueType.ConditionalEveryTurns -> checkOnGameInfo { turns % conditional.params[0].toIntLoose() == 0 }
+            UniqueType.ConditionalBeforeTurns -> checkOnGameInfo { turns < conditional.params[0].toIntLoose() }
+            UniqueType.ConditionalAfterTurns -> checkOnGameInfo { turns >= conditional.params[0].toIntLoose() }
             UniqueType.ConditionalTutorialsEnabled -> UncivGame.Current.settings.showTutorials
             UniqueType.ConditionalTutorialCompleted -> conditional.params[0] in UncivGame.Current.settings.tutorialTasksCompleted
 
@@ -213,7 +214,7 @@ object Conditionals {
                   it.cityConstructions.containsBuildingOrEquivalent(conditional.params[0]) } }
             UniqueType.ConditionalBuildingBuiltAmount ->
                 checkOnCiv { cities.count { it.cityConstructions.containsBuildingOrEquivalent(conditional.params[0])
-                    && it.matchesFilter(conditional.params[2]) } >= conditional.params[1].toInt() }
+                    && it.matchesFilter(conditional.params[2]) } >= conditional.params[1].toIntLoose() }
             UniqueType.ConditionalBuildingBuiltByAnybody ->
                 checkOnGameInfo { getCities().any { it.cityConstructions.containsBuildingOrEquivalent(conditional.params[0]) } }
             UniqueType.ConditionalBuildingNotBuiltByAnybody ->
@@ -243,13 +244,13 @@ object Conditionals {
             UniqueType.ConditionalCityWithoutBuilding ->
                 checkOnCity { !cityConstructions.containsBuildingOrEquivalent(conditional.params[0]) }
             UniqueType.ConditionalPopulationFilter ->
-                checkOnCity { population.getPopulationFilterAmount(conditional.params[1]) >= conditional.params[0].toInt() }
+                checkOnCity { population.getPopulationFilterAmount(conditional.params[1]) >= conditional.params[0].toIntLoose() }
             UniqueType.ConditionalExactPopulationFilter ->
-                checkOnCity { population.getPopulationFilterAmount(conditional.params[1]) == conditional.params[0].toInt() }
+                checkOnCity { population.getPopulationFilterAmount(conditional.params[1]) == conditional.params[0].toIntLoose() }
             UniqueType.ConditionalBetweenPopulationFilter ->
-                checkOnCity {population.getPopulationFilterAmount(conditional.params[2]) in conditional.params[0].toInt()..conditional.params[1].toInt() }
+                checkOnCity {population.getPopulationFilterAmount(conditional.params[2]) in conditional.params[0].toIntLoose()..conditional.params[1].toIntLoose() }
             UniqueType.ConditionalBelowPopulationFilter ->
-                checkOnCity { population.getPopulationFilterAmount(conditional.params[1]) < conditional.params[0].toInt() }
+                checkOnCity { population.getPopulationFilterAmount(conditional.params[1]) < conditional.params[0].toIntLoose() }
             UniqueType.ConditionalWhenGarrisoned ->
                 checkOnCity { getCenterTile().militaryUnit?.canGarrison() == true }
 
@@ -265,10 +266,10 @@ object Conditionals {
                             || state.relevantUnit!!.hasStatus(conditional.params[0]) )
             UniqueType.ConditionalAttacking -> state.combatAction == CombatAction.Attack
             UniqueType.ConditionalDefending -> state.combatAction == CombatAction.Defend
-            UniqueType.ConditionalAboveHP -> state.relevantUnit != null && state.relevantUnit!!.health > conditional.params[0].toInt()
-                    || state.ourCombatant != null && state.ourCombatant.getHealth() > conditional.params[0].toInt()
-            UniqueType.ConditionalBelowHP -> state.relevantUnit != null && state.relevantUnit!!.health < conditional.params[0].toInt()
-                    ||state.ourCombatant != null && state.ourCombatant.getHealth() < conditional.params[0].toInt()
+            UniqueType.ConditionalAboveHP -> state.relevantUnit != null && state.relevantUnit!!.health > conditional.params[0].toIntLoose()
+                    || state.ourCombatant != null && state.ourCombatant.getHealth() > conditional.params[0].toIntLoose()
+            UniqueType.ConditionalBelowHP -> state.relevantUnit != null && state.relevantUnit!!.health < conditional.params[0].toIntLoose()
+                    ||state.ourCombatant != null && state.ourCombatant.getHealth() < conditional.params[0].toIntLoose()
             UniqueType.ConditionalHasNotUsedOtherActions ->
                 state.unit == null || // So we get the action as a valid action in BaseUnit.hasUnique()
                     state.unit.abilityToTimesUsed.isEmpty()
@@ -286,7 +287,7 @@ object Conditionals {
             UniqueType.ConditionalFightingInTiles ->
                 state.attackedTile?.matchesFilter(conditional.params[0], state.relevantCiv) == true
             UniqueType.ConditionalNearTiles ->
-                state.relevantTile != null && state.relevantTile!!.getTilesInDistance(conditional.params[0].toInt()).any {
+                state.relevantTile != null && state.relevantTile!!.getTilesInDistance(conditional.params[0].toIntLoose()).any {
                     it.matchesFilter(conditional.params[1], state.relevantCiv)
                 }
 
@@ -316,7 +317,7 @@ object Conditionals {
                 state.relevantTile != null
                     && state.relevantTile!!.neighbors.count {
                     it.matchesFilter(conditional.params[2], state.relevantCiv)
-                } in conditional.params[0].toInt()..conditional.params[1].toInt()
+                } in conditional.params[0].toIntLoose()..conditional.params[1].toIntLoose()
 
             UniqueType.ConditionalOnWaterMaps -> state.region?.continentID == -1
             UniqueType.ConditionalInRegionOfType -> state.region?.type == conditional.params[0]

@@ -26,6 +26,7 @@ import com.unciv.models.translations.tr
 import com.unciv.ui.components.fonts.Fonts
 import com.unciv.ui.popups.ConfirmPopup
 import com.unciv.ui.screens.pickerscreens.ImprovementPickerScreen
+import com.unciv.utils.toIntLoose
 import yairm210.purity.annotations.Readonly
 
 @Suppress("UNUSED_PARAMETER") // These methods are used as references in UnitActions.actionTypeToFunctions and need identical signature
@@ -154,7 +155,7 @@ object UnitActionsFromUniques {
         // Construct the list of possible destination tile filters, keeping the largest distance
         for (unique in paradropUniques) {
             val tileFilter = unique.params[0]
-            val distance = unique.params[1].toInt()
+            val distance = unique.params[1].toIntLoose()
             val existingDistance = unit.cache.paradropDestinationTileFilters[tileFilter]
             if (existingDistance == null || distance > existingDistance) {
                 unit.cache.paradropDestinationTileFilters[tileFilter] = distance
@@ -229,7 +230,7 @@ object UnitActionsFromUniques {
                 UniqueType.OneTimeEnterGoldenAgeTurns -> {
                     unique.placeholderText.fillPlaceholders(
                         unit.civ.goldenAges.calculateGoldenAgeLength(
-                            unique.params[0].toInt()).tr())
+                            unique.params[0].toIntLoose()).tr())
                     }
                 UniqueType.OneTimeGainStat -> {
                     if (unique.hasModifier(UniqueType.ModifiedByGameSpeed)) {
@@ -237,7 +238,7 @@ object UnitActionsFromUniques {
                         val modifier = unit.civ.gameInfo.speed.statCostModifiers[Stat.safeValueOf(stat)]
                             ?: unit.civ.gameInfo.speed.modifier
                         UniqueType.OneTimeGainStat.placeholderText.fillPlaceholders(
-                            (unique.params[0].toInt() * modifier).toInt().tr(), stat
+                            (unique.params[0].toIntLoose() * modifier).toInt().tr(), stat
                         )
                     }
                     else unique.text.removeConditionals()
@@ -247,8 +248,8 @@ object UnitActionsFromUniques {
                     val modifier = unit.civ.gameInfo.speed.statCostModifiers[Stat.safeValueOf(stat)]
                         ?: unit.civ.gameInfo.speed.modifier
                     unique.placeholderText.fillPlaceholders(
-                        (unique.params[0].toInt() * modifier).toInt().tr(),
-                        (unique.params[1].toInt() * modifier).toInt().tr(),
+                        (unique.params[0].toIntLoose() * modifier).toInt().tr(),
+                        (unique.params[1].toIntLoose() * modifier).toInt().tr(),
                         stat
                     )
                 }
@@ -332,7 +333,7 @@ object UnitActionsFromUniques {
                     continue
 
                 val resourcesAvailable = improvement.getMatchingUniques(UniqueType.ConsumesResources).none { improvementUnique ->
-                        (civResources[improvementUnique.params[1]] ?: 0) < improvementUnique.params[0].toInt()
+                        (civResources[improvementUnique.params[1]] ?: 0) < improvementUnique.params[0].toIntLoose()
                 }
 
                 yield(UnitAction(UnitActionType.CreateImprovement, 85f,

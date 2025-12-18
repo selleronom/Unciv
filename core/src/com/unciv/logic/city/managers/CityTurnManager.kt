@@ -11,6 +11,7 @@ import com.unciv.logic.civilization.OverviewAction
 import com.unciv.models.ruleset.tile.ResourceType
 import com.unciv.models.ruleset.unique.UniqueType
 import com.unciv.ui.screens.overviewscreen.EmpireOverviewCategories
+import com.unciv.utils.toIntLoose
 import kotlin.random.Random
 
 class CityTurnManager(val city: City) {
@@ -123,7 +124,7 @@ class CityTurnManager(val city: City) {
         if (city.isBeingRazed) {
             val removedPopulation =
                     1 + city.civ.getMatchingUniques(UniqueType.CitiesAreRazedXTimesFaster)
-                        .sumOf { it.params[0].toInt() - 1 }
+                        .sumOf { it.params[0].toIntLoose() - 1 }
 
             if (city.population.population <= removedPopulation) {
                 city.espionage.removeAllPresentSpies(SpyFleeReason.Other)
